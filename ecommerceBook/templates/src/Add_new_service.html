@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="/output.css" rel="stylesheet">
+    <title>{% if is_edit %}Edit Service{% else %}Add New Service{% endif %}</title>
+    <style>
+        .main-content-wrapper {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .page-content {
+            flex: 1;
+        }
+
+    </style>
+</head>
+<body class="font-urbanist bg-zinc-50">
+    <div class="main-content-wrapper">
+        <div class="flex flex-1">
+            <!-- Mobile Menu Button -->
+            <button id="sidebar-toggle" class="md:hidden fixed top-2 right-4 z-20 p-2 rounded-md text-teal-900 bg-white shadow-md hover:bg-gray-100 hover:shadow-lg transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+
+            <!-- Dynamic Sidebar -->
+            {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+
+            <!-- Main Content -->
+            <div class="content-area w-full md:ml-54 lg:ml-64">
+                <div class="page-content relative p-4 md:p-8 flex flex-col pb-24">
+                    <!-- Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6">
+                        <div class="flex items-center">
+                            <h1 class="text-xl md:text-2xl font-bold text-teal-900">{% if is_edit %}Edit Service{% else %}Add New Service{% endif %}</h1>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="w-full xl:flex-1 xl:flex xl:items-center">
+                        <form method="post" enctype="multipart/form-data" class="flex flex-col pt-8 xl:pt-0 lg:flex-row gap-4 md:gap-6 xl:gap-8 w-full">
+                            {% csrf_token %}
+
+                            <!-- Display form errors -->
+                            {% if form.non_field_errors %}
+                                <div class="w-full mb-4">
+                                    <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded relative">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Left Column -->
+                            <div class="w-full lg:w-1/2 bg-white rounded-lg shadow-sm p-4 lg:p-4 md:p-6">
+                                <h2 class="text-2xl font-bold text-teal-900 mb-6">General Information</h2>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-teal-900 text-base font-medium mb-2">Service Name</label>
+                                        {{ form.title }}
+                                        {% if form.title.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <label class="block text-teal-900 text-base font-medium mb-2">Service Details</label>
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                            <div class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 md:gap-6">
+                                        <div class="w-full">
+                                            <label class="block text-teal-900 text-base font-medium mb-2">Price</label>
+                                            {{ form.price }}
+                                            {% if form.price.errors %}
+                                                <div class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="w-full">
+                                            <label class="block text-teal-900 text-base font-medium mb-2">Category</label>
+                                            {{ form.category }}
+                                            {% if form.category.errors %}
+                                                <div class="text-red-500 text-sm mt-1">{{ form.category.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="w-full lg:w-1/2 space-y-4 md:space-y-6">
+                                <!-- Image Upload -->
+                                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
+                                    <h2 class="text-2xl font-bold text-teal-900 mb-3 mt-[-15px]">Upload Image (Optional)</h2>
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 md:p-6 text-center transition-all duration-300 hover:border-teal-500 hover:bg-teal-50 cursor-pointer" id="image-upload-area" onclick="document.getElementById('service-image-input').click()">
+                                        <div class="flex flex-col items-center justify-center gap-4 w-full">
+                                            <img src="{% static 'assets/Buyer_Dashboard_images/cloud-add.svg' %}" alt="Upload" class="w-10 h-10 transition-transform duration-300 hover:scale-110 pointer-events-none">
+                                            <div class="space-y-1 pointer-events-none px-2">
+                                                <p class="text-sm md:text-base lg:text-lg font-semibold text-zinc-800 break-words">Choose a file or drag & drop it here</p>
+                                                <p class="text-xs md:text-sm text-gray-400">JPEG, PNG formats, up to 10MB</p>
+                                            </div>
+                                            <button type="button" class="text-teal-700 text-sm md:text-base font-medium hover:text-teal-800 focus:outline-none transition-colors duration-300 pointer-events-none">
+                                                Browse File
+                                            </button>
+                                            <p id="image-upload-success" class="hidden text-green-600 font-medium text-sm md:text-base pointer-events-none">Image uploaded successfully!</p>
+                                        </div>
+                                    </div>
+                                    {{ form.service_image }}
+                                    {% if form.service_image.errors %}
+                                        <div class="text-red-500 text-sm mt-1">{{ form.service_image.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Save Button (inside right column) -->
+                                <div class="flex justify-end gap-3 mt-6">
+                                    {% if is_edit %}
+                                        <a href="{% url 'seller_product_detail' 'service' service.id %}"
+                                           class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white font-medium px-7 md:px-8 py-2.5 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 min-w-[150px] md:min-w-[180px] justify-center">
+                                            Cancel
+                                        </a>
+                                    {% endif %}
+                                    <button id="save-btn" type="submit"
+                                        class="inline-flex items-center gap-2 bg-[#1E4841] hover:bg-[#1E4841]/80 text-white font-medium px-7 md:px-8 py-2.5 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E4841] min-w-[150px] md:min-w-[180px] justify-center">
+                                        {% if is_edit %}Update Service{% else %}Save{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="bg-white border-t border-gray-200 py-4 px-4 md:px-8 w-full">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-center md:text-left mb-4 md:mb-0">
+                            <p class="text-sm text-gray-600">Copyright 2025 book.com</p>
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <a href="{% url 'privacy_policy' %}" class="text-sm text-gray-600 hover:text-teal-900">Privacy Policy</a>
+                            <a href="{% url 'contact_us' %}" class="text-sm text-gray-600 hover:text-teal-900">Contact</a>
+                        </div>
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <a href="#" class="text-gray-500 hover:text-teal-900">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-teal-900">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-teal-900">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-teal-900">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-500 hover:text-teal-900">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="Linkedin" class="w-5 h-5">
+                            </a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.querySelector('.main-content-wrapper');
+
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('-translate-x-full');
+            sidebar.classList.toggle('shadow-lg');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && !sidebar.contains(e.target) && e.target !== sidebarToggle) {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('shadow-lg');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('-translate-x-full');
+            }
+        });
+
+        // File upload handlers
+        const imageInput = document.getElementById('service-image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const imageName = document.getElementById('image-name');
+
+        // Image upload handler
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const successMsg = document.getElementById('image-upload-success');
+                if (file) {
+                    // Show success message
+                    if (successMsg) {
+                        successMsg.classList.remove('hidden');
+                    }
+                } else {
+                    // Hide success message if no file
+                    if (successMsg) {
+                        successMsg.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Clear image upload
+        function clearImageUpload() {
+            const successMsg = document.getElementById('image-upload-success');
+            if (imageInput) {
+                imageInput.value = '';
+            }
+            if (successMsg) {
+                successMsg.classList.add('hidden');
+            }
+        }
+
+        // Drag and drop functionality for image upload
+        const imageUploadArea = document.getElementById('image-upload-area');
+        if (imageUploadArea) {
+            imageUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                imageUploadArea.classList.add('bg-gray-50');
+            });
+
+            imageUploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                imageUploadArea.classList.remove('bg-gray-50');
+            });
+
+            imageUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                imageUploadArea.classList.remove('bg-gray-50');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    imageInput.files = files;
+                    const event = new Event('change', { bubbles: true });
+                    imageInput.dispatchEvent(event);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

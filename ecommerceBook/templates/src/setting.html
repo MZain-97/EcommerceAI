@@ -1,0 +1,528 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+</head>
+<body class="font-urbanist bg-background-main text-primary min-h-screen">
+
+  <section id="settings-page">
+    <div class="flex flex-col md:flex-row min-h-screen w-full bg-[#FFFCF5]">
+
+      <!-- Dynamic Sidebar -->
+      {% if user.user_type == 'seller' %}
+          {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='settings' %}
+      {% else %}
+          {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='settings' %}
+      {% endif %}
+
+      <!-- Mobile Header -->
+      <div class="flex items-center justify-between p-4 bg-[#FFFCF5] md:hidden">
+        <div class="flex items-center">
+          <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="logo-icon" class="w-7 h-7 mr-2">
+          <span class="font-inter font-bold text-lg text-primary">Logo</span>
+        </div>
+        <button id="mobileMenuButton" class="p-2 rounded-lg bg-[#FFFCF5] hover:bg-gray-100 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Menu Overlay -->
+      <div id="mobileMenuOverlay" class="hidden md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300"></div>
+
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="hidden md:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#FFFCF5] shadow-xl z-50 transform -translate-x-full transition-transform duration-300">
+        <div class="p-4 md:p-6">
+          <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div class="flex items-center">
+              <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="logo-icon" class="w-7 h-7 mr-2">
+              <span class="font-inter font-bold text-lg text-primary">Logo</span>
+            </div>
+            <button id="mobileMenuClose" class="text-primary p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <nav class="space-y-2 md:space-y-3">
+            {% if current_mode == 'seller' %}
+                    <a href="{% url 'seller_dashboard' %}" class="w-full">
+                        <button class="w-full flex items-center px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/3d-square.svg' %}" alt="Products" class="w-4 h-4 mr-3">
+                            <span class="text-gray-800 text-sm font-medium">Products</span>
+                        </button>
+                    </a>
+                {% else %}
+                    <a href="{% url 'buyer_dashboard' %}" class="w-full">
+                        <button class="w-full flex items-center px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/3d-square.svg' %}" alt="Products" class="w-4 h-4 mr-3">
+                            <span class="text-gray-800 text-sm font-medium">Products</span>
+                        </button>
+                    </a>
+                {% endif %}
+                <a href="{% url 'orders' %}" class="w-full">
+                    <button class="w-full flex items-center px-3 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/element-4.svg' %}" alt="My Orders" class="w-4 h-4 mr-3">
+                        <span class="text-teal-900 text-sm font-medium">
+                            {% if current_mode == 'seller' %}My Sales{% else %}My Order{% endif %}
+                        </span>
+                    </button>
+                </a>
+            <a href="{% url 'settings' %}" class="flex items-center px-4 py-3 bg-teal-900 text-white rounded-lg transition-colors">
+              <img src="{% static 'assets/Buyer_Dashboard_images/setting-2.svg' %}" alt="Setting Icon" class="w-5 h-5 mr-3">
+              <span class="text-base font-medium">Settings</span>
+            </a>
+          </nav>
+
+          <!-- Mobile Logout -->
+           <div class="mt-auto pt-4 border-t border-gray-200">
+            <a href="{% url 'logout' %}" class="w-full group">
+              <button class="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                <span class="text-base font-medium">Logout</span>
+              </button>
+            </a>
+          </div> 
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col bg-[#FBFBFC] min-h-screen md:ml-54 lg:ml-64">
+        <div class="flex-1 flex flex-col p-3 md:p-6 lg:p-8 overflow-hidden">
+          <header class="flex-none">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 md:gap-4 mb-3 md:mb-6">
+              <h1 class="font-urbanist font-bold text-xl md:text-2xl">Settings</h1>
+              <div class="hidden md:block md:flex items-center gap-2 md:gap-3 w-full lg:w-auto">
+                <!-- Search Bar (Left) -->
+                {% comment %} <div class="flex items-center gap-2 bg-gray-100 rounded-full py-2 px-4 flex-1 lg:flex-none lg:w-64 min-w-0">
+                  <input type="text" placeholder="Search..."
+                         class="w-full text-sm placeholder:text-gray-400 focus:outline-none bg-transparent">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div> {% endcomment %}
+
+                <!-- Notification Icon -->
+                {% comment %} <button class="relative bg-background-light-green rounded-full w-9 h-9 flex justify-center items-center hover:bg-opacity-80 transition-colors flex-shrink-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                  </svg>
+                  <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-background-light-green"></span>
+                </button> {% endcomment %}
+
+                <!-- User Name -->
+                {% comment %} <span class="font-medium text-sm text-primary hidden lg:block">{{ user.full_name }}</span>
+
+                <!-- Profile Picture (Right) -->
+                <a href="{% url 'settings' %}">
+                  {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" alt="Profile" class="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-teal-500 transition-all">
+                  {% else %}
+                    <img src="{% static 'assets/Buyer_Dashboard_images/Place image.png' %}" alt="Profile" class="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-teal-500 transition-all">
+                  {% endif %}
+                </a> {% endcomment %}
+              </div>
+            </div>
+
+
+            <!-- Profile Header -->
+            <div class="flex flex-col sm:flex-row items-center gap-2 md:gap-4 mb-3 md:mb-6 mt-4 md:mt-8">
+              <div class="relative w-12 h-12 sm:w-20 sm:h-20">
+                <label for="profile_image" class="cursor-pointer group">
+                  {% if user.profile_image %}
+                    <img id="profile-preview" src="{{ user.profile_image.url }}" alt="User Avatar" class="w-full h-full rounded-full object-cover border-2 border-gray-300 group-hover:border-teal-500 transition-colors">
+                  {% else %}
+                    <img id="profile-preview" src="{% static 'assets/Buyer_Dashboard_images/Place image.png' %}" alt="User Avatar" class="w-full h-full rounded-full object-cover border-2 border-gray-300 group-hover:border-teal-500 transition-colors">
+                  {% endif %}
+                  <div class="absolute right-0 bottom-0 w-4 h-4 sm:w-6 sm:h-6 flex justify-center items-center">
+                    <div class="w-full h-full bg-white rounded-full border-2 border-teal-900 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
+                      <svg class="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div class="text-center sm:text-left">
+                <p class="text-sm sm:text-lg font-bold">{{ user.full_name }}</p>
+                <p class="text-[10px] sm:text-sm text-gray-600">Last Update {{ user.last_login|date:"m-d-Y" }}</p>
+                <p class="text-[8px] sm:text-xs text-gray-500 mt-1">Click image to upload new photo</p>
+              </div>
+            </div>
+          </header>
+
+          <!-- Settings Form -->
+          <form method="post" enctype="multipart/form-data" class="flex-1 flex flex-col space-y-4 md:space-y-6 mt-2 md:mt-4">
+            {% csrf_token %}
+
+            <!-- Hidden file input for profile image -->
+            <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(event)">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-3 md:gap-6">
+              <div class="flex flex-col space-y-2 md:space-y-3">
+                <label for="full-name" class="text-xs md:text-sm font-medium text-gray-700">Full Name :</label>
+                <input type="text" id="full-name" name="full_name" value="{{ user.full_name }}" placeholder="Full Name"
+                       class="bg-gray-100 rounded-lg px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-primary placeholder:text-gray-400 h-8 md:h-12 focus:bg-zinc-300 transition-colors focus:outline-none focus:border-gray-300">
+              </div>
+              <div class="flex flex-col space-y-2 md:space-y-3">
+                <label for="email" class="text-xs md:text-sm font-medium text-gray-700">Email :</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" placeholder="Email"
+                       class="bg-gray-100 rounded-lg px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-primary placeholder:text-gray-400 h-8 md:h-12 focus:bg-zinc-300 transition-colors focus:outline-none focus:border-gray-300">
+              </div>
+              <div class="flex flex-col space-y-2 md:space-y-3">
+                <label for="user-role" class="text-xs md:text-sm font-medium text-gray-700">User Role :</label>
+                <input type="text" id="user-role" value="{{ user_type }}" placeholder="User Role" readonly
+                       class="bg-gray-200 rounded-lg px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600 placeholder:text-gray-400 h-8 md:h-12 cursor-not-allowed">
+              </div>
+              {% if user.user_type == 'seller' or user.seller_access_paid %}
+              <div class="w-full">
+                <div class="flex flex-col space-y-3">
+                  <label class="text-sm md:text-base font-semibold text-gray-800">
+                    Payment Account Setup
+                  </label>
+
+                  <!-- Stripe Connect Status -->
+                  {% if user.stripe_connect_status == 'active' %}
+                  <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-start">
+                      <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                      </svg>
+                      <div class="flex-1">
+                        <p class="text-sm font-semibold text-green-800">Connected & Active</p>
+                        <p class="text-xs text-green-700 mt-1">Account ID: {{ user.stripe_account_id }}</p>
+                        <p class="text-xs text-green-600 mt-1">You're receiving automatic payouts!</p>
+                      </div>
+                    </div>
+                  </div>
+                  {% elif user.stripe_connect_status == 'pending' %}
+                  <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex items-start">
+                      <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                      <div class="flex-1">
+                        <p class="text-sm font-semibold text-yellow-800">Setup Incomplete</p>
+                        <p class="text-xs text-yellow-700 mt-1">Account ID: {{ user.stripe_account_id }}</p>
+                        <p class="text-xs text-yellow-600 mt-1">Please complete your Stripe onboarding to receive payouts</p>
+                        <button onclick="refreshStripeConnect()" class="mt-2 text-xs font-medium text-yellow-700 hover:text-yellow-900 underline">
+                          Continue Setup →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  {% elif user.stripe_connect_status == 'restricted' %}
+                  <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-start">
+                      <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                      </svg>
+                      <div class="flex-1">
+                        <p class="text-sm font-semibold text-red-800">Account Restricted</p>
+                        <p class="text-xs text-red-700 mt-1">Charges are disabled. Please check your Stripe dashboard</p>
+                        <a href="https://dashboard.stripe.com/account" target="_blank" class="mt-2 inline-block text-xs font-medium text-red-700 hover:text-red-900 underline">
+                          Open Stripe Dashboard →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  {% else %}
+                  <!-- Not Connected - Show Connect Button -->
+                  <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex flex-col">
+                      <p class="text-sm font-semibold text-blue-900 mb-2">Connect Your Stripe Account</p>
+                      <p class="text-xs text-blue-700 mb-3">
+                        Securely connect your Stripe account to receive automatic payouts (80% of each sale)
+                      </p>
+                      <button
+                        onclick="connectStripeAccount()"
+                        type="button"
+                        class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Connect Stripe Account
+                      </button>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                  <!-- Manual Entry (Optional Fallback) -->
+                  <div class="mt-4">
+                    <details class="group">
+                      <summary class="text-xs text-gray-600 cursor-pointer hover:text-gray-800 flex items-center">
+                        <svg class="w-4 h-4 mr-1 transform group-open:rotate-90 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        Or enter Stripe Account ID manually
+                      </summary>
+                      <div class="mt-3 ml-5">
+                        <div class="flex flex-col space-y-2">
+                          <label for="stripe_account_id" class="text-xs font-medium text-gray-700">
+                            Stripe Account ID
+                          </label>
+                          <input
+                            id="stripe_account_id"
+                            name="stripe_account_id"
+                            type="text"
+                            value="{{ user.stripe_account_id|default:'' }}"
+                            class="w-full bg-gray-100 rounded-lg px-3 py-2 text-sm text-primary placeholder-gray-400 h-10 focus:bg-zinc-300 transition-colors focus:outline-none"
+                            placeholder="acct_xxxxxxxxxxxxx"
+                            pattern="acct_[A-Za-z0-9]+"
+                            title="Must start with 'acct_'">
+                          <p class="text-xs text-gray-500">
+                            Only use this if you already have a Stripe Connect account.
+                            <a href="https://dashboard.stripe.com" target="_blank" class="text-blue-600 hover:underline">
+                              View Dashboard
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <hr class="my-3 md:my-6 border-t-2 border-gray-200">
+
+
+            <!-- Passwords -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full">
+              <div class="flex flex-col w-full space-y-2 md:space-y-3">
+                <label for="current-password" class="text-xs md:text-sm font-medium text-gray-700">Current Password</label>
+                <input type="password" id="current-password" name="current_password" placeholder="Current Password"
+                      class="w-full bg-zinc-100 rounded-lg px-3 md:px-4 py-2 md:py-3 text-sm md:text-base text-primary placeholder:text-gray-500 placeholder:text-sm md:placeholder:text-base h-10 md:h-12 focus:bg-zinc-300 transition-colors focus:outline-none focus:border-gray-300">
+              </div>
+              <div class="flex flex-col w-full space-y-2 md:space-y-3">
+                <label for="new-password" class="text-xs md:text-sm font-medium text-gray-700">New Password</label>
+                <input type="password" id="new-password" name="new_password" placeholder="New Password"
+                      class="w-full bg-zinc-100 rounded-lg px-3 md:px-4 py-2 md:py-3 text-sm md:text-base text-primary placeholder:text-gray-500 placeholder:text-sm md:placeholder:text-base h-10 md:h-12 focus:bg-zinc-300 transition-colors focus:outline-none focus:border-gray-300">
+              </div>
+              <div class="flex flex-col w-full space-y-2 md:space-y-3">
+                <label for="confirm-password" class="text-xs md:text-sm font-medium text-gray-700">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm Password"
+                      class="w-full bg-zinc-100 rounded-lg px-3 md:px-4 py-2 md:py-3 text-sm md:text-base text-primary placeholder:text-gray-500 placeholder:text-sm md:placeholder:text-base h-10 md:h-12 focus:bg-zinc-300 transition-colors focus:outline-none focus:border-gray-300">
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 md:mt-8 pt-2 md:pt-4">
+              <div class="flex flex-col sm:flex-row justify-end gap-3 md:gap-4">
+                <a href="{% url 'buyer_dashboard' %}" class="w-full sm:w-[248px] py-2 md:py-3 px-6 md:px-8 text-xs md:text-sm rounded-lg border border-primary text-primary font-medium hover:bg-gray-50 transition-colors h-10 md:h-12 min-h-[40px] md:min-h-[48px] flex items-center justify-center">
+                  Cancel
+                </a>
+                <button type="submit" class="w-full sm:w-[248px] py-2 md:py-3 px-6 md:px-8 text-xs md:text-sm rounded-lg bg-[#1E4841] text-white font-medium hover:bg-[#173731] transition-colors h-10 md:h-12 min-h-[40px] md:min-h-[48px]">
+                  Save
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-zinc-50 py-4">
+          <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+              <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+              <div class="flex space-x-6 mt-4 md:mt-0">
+                <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+              </div>
+              <div class="flex space-x-4 mt-4 md:mt-0">
+                <!-- Social Icons -->
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                  <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                </a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <script>
+
+    // Enhanced Mobile Menu
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      const mobileMenuClose = document.getElementById('mobileMenuClose');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+      function openMobileMenu() {
+        mobileMenu.classList.remove('hidden', '-translate-x-full');
+        mobileMenuOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileMenu() {
+        mobileMenu.classList.add('-translate-x-full');
+        mobileMenuOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+          if (mobileMenu.classList.contains('-translate-x-full')) {
+            mobileMenu.classList.add('hidden');
+          }
+        }, 300);
+      }
+
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+      }
+
+      if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+      }
+
+      if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+      }
+
+      // Close menu on escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          closeMobileMenu();
+        }
+      });
+
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768 && !mobileMenu.classList.contains('hidden')) {
+          closeMobileMenu();
+        }
+      });
+    });
+
+    // Image preview function
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById('profile-preview');
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Get CSRF token from cookie
+    function getCSRFToken() {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, 10) === 'csrftoken=') {
+            cookieValue = decodeURIComponent(cookie.substring(10));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Connect Stripe Account - Create new Express account and redirect to onboarding
+    function connectStripeAccount() {
+      const button = event.target;
+      const originalText = button.innerHTML;
+
+      // Disable button and show loading
+      button.disabled = true;
+      button.innerHTML = '<svg class="animate-spin h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+      fetch('/stripe-connect/create/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.onboarding_url) {
+          // Redirect to Stripe onboarding
+          window.location.href = data.onboarding_url;
+        } else {
+          // Show error
+          alert('Error: ' + (data.message || 'Failed to create Stripe account'));
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to connect Stripe account. Please try again.');
+        button.disabled = false;
+        button.innerHTML = originalText;
+      });
+    }
+
+    // Refresh Stripe Connect link for incomplete onboarding
+    function refreshStripeConnect() {
+      const button = event.target;
+      const originalText = button.innerHTML;
+
+      // Disable button and show loading
+      button.disabled = true;
+      button.innerHTML = 'Loading...';
+
+      fetch('/stripe-connect/refresh/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.onboarding_url) {
+          // Redirect to Stripe onboarding
+          window.location.href = data.onboarding_url;
+        } else {
+          // Show error
+          alert('Error: ' + (data.message || 'Failed to refresh onboarding link'));
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to refresh onboarding link. Please try again.');
+        button.disabled = false;
+        button.innerHTML = originalText;
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,775 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                        'sans': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+    <title>Seller Dashboard</title>
+</head>
+
+<body class="font-urbanist bg-zinc-50">
+    <!-- Mobile Menu Button -->
+    <button id="menuToggle" class="md:hidden fixed top-2 right-4 z-20 p-2 rounded-md text-teal-900 bg-white shadow-md hover:bg-gray-100 hover:shadow-lg transition-all duration-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Dynamic Sidebar -->
+        {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-54 lg:ml-64">
+            <!-- Top Navigation -->
+            <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <div class="flex justify-between items-center">
+                        <!-- Left Section: Welcome Message -->
+                        <div class="flex items-center space-x-3">
+                            <div>
+                                <h1 class="text-lg md:text-xl font-bold text-gray-800">Welcome back, <span class="text-teal-600">{{ user.full_name|default:"Seller" }}</span></h1>
+                                <p class="text-xs text-gray-500 hidden sm:block">Manage your products and sales</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Section: Search, Notifications, Profile -->
+                        <div class="flex items-center space-x-2 md:space-x-4">
+                            <!-- Search Bar -->
+                            <div class="relative hidden md:block">
+                                <form method="GET" action="{% url 'seller_dashboard' %}">
+                                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search products..."
+                                        class="w-48 lg:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all">
+                                    <button type="submit" class="absolute left-3 top-2.5 text-gray-400 hover:text-teal-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Notification Bell with Dropdown -->
+                            <div class="relative">
+                                <button id="notificationButton" class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group">
+                                    <svg class="w-5 h-5 text-gray-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                        </path>
+                                    </svg>
+                                    <!-- Notification Badge -->
+                                    <span id="notificationBadge" class="absolute top-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-lg border-2 border-white" style="display: none;">0</span>
+                                </button>
+
+                                <!-- Notification Dropdown -->
+                                <div id="notificationDropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 hidden">
+                                    <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-lg font-bold text-gray-800">Notifications</h3>
+                                            <button id="markAllRead" class="text-xs text-teal-600 hover:text-teal-700 font-semibold">Mark all read</button>
+                                        </div>
+                                    </div>
+                                    <div id="notificationList" class="max-h-96 overflow-y-auto">
+                                        <!-- Notifications will be loaded here via JavaScript -->
+                                        <div class="p-8 text-center text-gray-400">
+                                            <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                            </svg>
+                                            <p class="text-sm">No notifications yet</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Profile Section -->
+                            <a href="{% url 'settings' %}" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors group">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="User"
+                                        class="w-9 h-9 rounded-full bg-gray-200 ring-2 ring-gray-200 group-hover:ring-teal-500 transition-all object-cover">
+                                {% else %}
+                                    <img src="{% static 'assets/Buyer_Dashboard_images/Place image.png' %}" alt="User"
+                                        class="w-9 h-9 rounded-full bg-gray-200 ring-2 ring-gray-200 group-hover:ring-teal-500 transition-all">
+                                {% endif %}
+                                <div class="hidden lg:block">
+                                    <p class="text-sm font-semibold text-gray-700 group-hover:text-teal-600 transition-colors">{{ user.full_name }}</p>
+                                    <p class="text-xs text-gray-500">Seller Account</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                <!-- Category Filter -->
+                <div class="mb-6 relative">
+                    <div class="flex justify-between items-center gap-4">
+                        <div class="flex-1">
+                            <button type="button" id="categoryDropdown"
+                                class="inline-flex justify-between items-center w-36 px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-zinc-50 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                aria-expanded="true" aria-haspopup="true">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                    <span>Category</span>
+                                </div>
+                                <svg class="-mr-1 ml-2 h-4 w-4 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button type="button" id="addNewButton" aria-haspopup="true" aria-expanded="false"
+                                class="w-32 h-10 rounded-[5px] border-[0.80px] border-gray-400 hover:bg-gray-100 inline-flex items-center justify-center gap-2">
+                                <span class="text-center text-neutral-700 text-sm font-normal font-['Poppins']">Add New</span>
+                                <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div id="addNewMenu" class="hidden absolute right-0 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black/5 z-20" role="menu" aria-orientation="vertical" aria-labelledby="addNewButton">
+                                <div class="py-1" role="none">
+                                    <a href="{% url 'add_new_service' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Service</a>
+                                    <a href="{% url 'add_new_book' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Book</a>
+                                    <a href="{% url 'add_new_course' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Course</a>
+                                    <a href="{% url 'add_new_webinar' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Webinar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown menu -->
+                    <div id="dropdownMenu"
+                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 "
+                        role="menu" aria-orientation="vertical" aria-labelledby="categoryDropdown">
+                        <div class="py-1" role="none">
+                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                role="menuitem">All Categories</a>
+                            {% for category in categories %}
+                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                role="menuitem">{{ category.name }}</a>
+                            {% empty %}
+                            <span class="text-gray-500 block px-4 py-2 text-sm italic">No categories available</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Services ({{ services|length }})</h2>
+                        <a href="{% url 'add_new_service' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            Add Service
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                    {% for service in services %}
+                        <!-- Service Card -->
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                            <a href="{% url 'seller_product_detail' 'service' service.id %}" class="block w-full h-48 overflow-hidden">
+                                {% if service.service_image %}
+                                    <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ service.title }}</h3>
+                                <div class="h-px bg-gray-200 my-2"></div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-gray-500 mr-1">Category:</span>
+                                        <span class="font-medium">{{ service.category.name }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-1">Price:</span>
+                                        <span class="text-sm text-zinc-700 font-bold">${{ service.price }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center mb-3">
+                                    <span class="text-sm text-gray-500 mr-1">Created:</span>
+                                    <span class="text-sm text-gray-700 font-bold">{{ service.created_at|date:"M d, Y" }}</span>
+                                </div>
+
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'seller_product_detail' 'service' service.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        View Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No services yet</h3>
+                            <p class="text-gray-500 mb-4">Start by adding your first service to the marketplace.</p>
+                            <a href="{% url 'add_new_service' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                                Add Your First Service
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Books Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Books ({{ books.count }})</h2>
+                        <a href="{% url 'add_new_book' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            Add Book
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ">
+                    {% for book in books %}
+                        <!-- Book Card -->
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                            <a href="{% url 'seller_product_detail' 'book' book.id %}" class="block w-full h-48 overflow-hidden">
+                                {% if book.book_image %}
+                                    <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ book.title }}</h3>
+                                <div class="h-px bg-gray-200 my-2"></div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-gray-500 mr-1">Category:</span>
+                                        <span class="font-medium">{{ book.category.name }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-1">Price:</span>
+                                        <span class="text-sm text-zinc-700 font-bold">${{ book.price }}</span>
+                                    </div> 
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-500 mr-1">Created:</span>
+                                    <span class="text-sm text-gray-700 font-bold">{{ book.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'seller_product_detail' 'book' book.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        View Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No books yet</h3>
+                            <p class="text-gray-500 mb-4">Start by adding your first book to the marketplace.</p>
+                            <a href="{% url 'add_new_book' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                                Add Your First Book
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Courses Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Courses ({{ courses.count }})</h2>
+                        <a href="{% url 'add_new_course' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            Add Course
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for course in courses %}
+                        <!-- Course Card -->
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                            <a href="{% url 'seller_product_detail' 'course' course.id %}" class="block w-full h-48 overflow-hidden">
+                                {% if course.course_image %}
+                                    <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
+                                <div class="h-px bg-gray-200 my-2"></div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-gray-500 mr-1">Category:</span>
+                                        <span class="font-medium">{{ course.category.name }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-1">Price:</span>
+                                        <span class="text-sm text-zinc-700 font-bold">${{ course.price }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500 mb-3">
+                                    Created: {{ course.created_at|date:"M d, Y" }}
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'seller_product_detail' 'course' course.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        View Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No courses yet</h3>
+                            <p class="text-gray-500 mb-4">Start by adding your first course to the marketplace.</p>
+                            <a href="{% url 'add_new_course' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                                Add Your First Course
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Webinars Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Webinars ({{ webinars.count }})</h2>
+                        <a href="{% url 'add_new_webinar' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            Add Webinar
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for webinar in webinars %}
+                        <!-- Webinar Card -->
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                            <a href="{% url 'seller_product_detail' 'webinar' webinar.id %}" class="block w-full h-48 overflow-hidden">
+                                {% if webinar.webinar_image %}
+                                    <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </a>
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ webinar.title }}</h3>
+                                <div class="h-px bg-gray-200 my-2"></div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center text-sm">
+                                        <span class="text-gray-500 mr-1">Category:</span>
+                                        <span class="font-medium">{{ webinar.category.name }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-1">Price:</span>
+                                        <span class="text-sm text-zinc-700 font-bold">${{ webinar.price }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-500 mr-1">Created:</span>
+                                    <span class="text-sm text-gray-700 font-bold">{{ webinar.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'seller_product_detail' 'webinar' webinar.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        View Detail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No webinars yet</h3>
+                            <p class="text-gray-500 mb-4">Start by adding your first webinar to the marketplace.</p>
+                            <a href="{% url 'add_new_webinar' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                                Add Your First Webinar
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Courses Section -->
+                
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-zinc-50 py-4">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+                        <div class="flex space-x-6 mt-4 md:mt-0">
+                            <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                            <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+                        </div>
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <!-- Social Icons -->
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Toggle dropdown on button click
+        const dropdownButton = document.getElementById('categoryDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        dropdownButton.addEventListener('click', function () {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownButton.setAttribute('aria-expanded', 'false');
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Close dropdown when clicking on a menu item
+        const menuItems = dropdownMenu.querySelectorAll('a');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                dropdownButton.setAttribute('aria-expanded', 'false');
+                dropdownMenu.classList.add('hidden');
+                // Update button text to show selected category
+                const buttonText = this.textContent;
+                const buttonSpan = dropdownButton.querySelector('span');
+                if (buttonText !== 'All Categories') {
+                    buttonSpan.textContent = buttonText;
+                } else {
+                    buttonSpan.textContent = 'Category';
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // "Add New" dropdown toggle and interactions
+        (function () {
+            const addNewButton = document.getElementById('addNewButton');
+            const addNewMenu = document.getElementById('addNewMenu');
+            if (!addNewButton || !addNewMenu) return;
+
+            addNewButton.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', String(!isExpanded));
+                addNewMenu.classList.toggle('hidden');
+            });
+
+            // Close on click outside
+            document.addEventListener('click', function (e) {
+                if (!addNewButton.contains(e.target) && !addNewMenu.contains(e.target)) {
+                    addNewButton.setAttribute('aria-expanded', 'false');
+                    addNewMenu.classList.add('hidden');
+                }
+            });
+
+            // Close when selecting a menu item
+            addNewMenu.querySelectorAll('a').forEach(item => {
+                item.addEventListener('click', function () {
+                    addNewButton.setAttribute('aria-expanded', 'false');
+                    addNewMenu.classList.add('hidden');
+                });
+            });
+        })();
+    </script>
+
+    <script>
+        // Mobile menu toggle
+        (function () {
+            const toggleBtn = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (!toggleBtn || !sidebar) return;
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+            }
+
+            function isMobile() {
+                return window.innerWidth < 768; // md breakpoint
+            }
+
+            toggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+            });
+
+            // Close when clicking outside on mobile
+            document.addEventListener('click', function (e) {
+                if (!isMobile()) return;
+                if (!sidebar.contains(e.target) && e.target !== toggleBtn) {
+                    closeSidebar();
+                }
+            });
+
+            // Ensure correct state on resize
+            window.addEventListener('resize', function () {
+                if (!isMobile()) {
+                    // Keep sidebar visible on md+
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    // Hide by default on mobile
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        })();
+    </script>
+
+    <!-- Notification System JavaScript -->
+    <script>
+        (function() {
+            const notificationButton = document.getElementById('notificationButton');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const notificationBadge = document.getElementById('notificationBadge');
+            const notificationList = document.getElementById('notificationList');
+            const markAllReadBtn = document.getElementById('markAllRead');
+            let isDropdownOpen = false;
+
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Fetch notifications from API
+            async function fetchNotifications() {
+                try {
+                    const response = await fetch('{% url "get_notifications" %}');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateNotificationBadge(data.unread_count);
+                        updateNotificationList(data.notifications);
+                    }
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                }
+            }
+
+            // Update notification badge
+            function updateNotificationBadge(count) {
+                if (count > 0) {
+                    notificationBadge.textContent = count > 99 ? '99+' : count;
+                    notificationBadge.style.display = 'flex';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            }
+
+            // Update notification list
+            function updateNotificationList(notifications) {
+                // Filter to show only unread notifications
+                const unreadNotifications = notifications.filter(notif => !notif.is_read);
+
+                if (unreadNotifications.length === 0) {
+                    notificationList.innerHTML = `
+                        <div class="p-8 text-center text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <p class="text-sm">No new notifications</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                unreadNotifications.forEach(notif => {
+                    const linkAttr = notif.link ? `onclick="handleNotificationClick(${notif.id}, '${notif.link}')"` : '';
+
+                    html += `
+                        <div class="bg-blue-50 p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors" ${linkAttr}>
+                            <div class="flex items-start">
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800">${notif.title}</p>
+                                    <p class="text-xs text-gray-600 mt-1">${notif.message}</p>
+                                    <p class="text-xs text-gray-400 mt-2">${notif.time_ago}</p>
+                                </div>
+                                <div class="ml-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                notificationList.innerHTML = html;
+            }
+
+            // Handle notification click
+            window.handleNotificationClick = function(notificationId, link) {
+                // Mark as read
+                fetch(`/api/notifications/${notificationId}/mark-read/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+
+                // Navigate to link if exists
+                if (link) {
+                    window.location.href = link;
+                }
+            };
+
+            // Toggle dropdown
+            notificationButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                isDropdownOpen = !isDropdownOpen;
+
+                if (isDropdownOpen) {
+                    notificationDropdown.classList.remove('hidden');
+                    fetchNotifications(); // Refresh notifications when opening
+                } else {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+
+            // Mark all as read
+            markAllReadBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('{% url "mark_notifications_read" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationBadge(0);
+                        fetchNotifications(); // Refresh list
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationButton.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    isDropdownOpen = false;
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+
+            // Initial fetch
+            fetchNotifications();
+
+            // Poll for new notifications every 15 seconds
+            setInterval(fetchNotifications, 15000);
+        })();
+    </script>
+
+    <!-- Chat Statistics JavaScript -->
+    <script>
+        (function() {
+            // Function to fetch chat statistics for sidebar badge only
+            function fetchChatStats() {
+                fetch('/api/seller-chat-stats/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update sidebar badge only
+                            const sidebarBadge = document.getElementById('sidebarChatBadge');
+                            if (sidebarBadge) {
+                                if (data.unread_count > 0) {
+                                    sidebarBadge.textContent = data.unread_count;
+                                    sidebarBadge.style.display = 'flex';
+                                } else {
+                                    sidebarBadge.style.display = 'none';
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching chat stats:', error);
+                    });
+            }
+
+            // Initial fetch
+            fetchChatStats();
+
+            // Poll for updates every 10 seconds
+            setInterval(fetchChatStats, 10000);
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+  <title>Register</title>
+
+</head>
+
+<body class="font-urbanist min-h-screen bg-[#F9F5ED] p-4 sm:p-6 overflow-hidden">
+  <div class="container mx-auto flex flex-col lg:flex-row items-center justify-center min-h-[calc(100vh-2rem)] mt-[-65px] overflow-hidden">
+    
+   
+    <div class="hidden lg:flex lg:w-1/2 items-center justify-center p-8 h-full">
+      <div class="w-full h-[720px] rounded-[10px] overflow-hidden mt-12">
+        <img class="w-full h-full object-cover object-center" src="{% static 'assets/laptop.png' %}" alt="Laptop">
+      </div>
+    </div>
+    
+   
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:mt-8">
+      <div class="w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-sm mt-5 iphone-se-mt">
+
+        <h1 class="text-lg sm:text-xl md:text-3xl font-bold text-center text-neutral-700 font-['Urbanist'] mb-6">
+          Create Your Account
+        </h1>
+
+        
+        <div class="w-full">
+          <div class="w-full max-w-sm sm:max-w-md md:max-w-xl h-12 flex bg-gray-100 rounded-[3px] p-1 mb-3 mx-auto">
+            <button type="button" id="buyer-btn"
+              class="w-1/2 h-full px-3 sm:px-4 py-2 bg-teal-900 text-white rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-teal-800 active:bg-teal-700">
+              <span class="text-xs sm:text-sm md:text-base font-normal font-['Poppins']">Buyer</span>
+            </button>
+            <button type="button" id="seller-btn"
+              class="w-1/2 h-full px-3 sm:px-4 py-2 text-neutral-700 bg-transparent rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-gray-200 active:bg-gray-300">
+              <span class="text-xs sm:text-sm md:text-base font-normal font-['Poppins']">Seller</span>
+            </button>
+          </div>
+        </div>
+
+        
+        <form method="post" class="space-y-3 sm:space-y-4">
+          {% csrf_token %}
+          {{ form.user_type }}
+          <div>
+            <label class="block text-neutral-700 text-xs sm:text-sm font-medium font-['Urbanist'] mb-1">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <div class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label class="block text-neutral-700 text-xs sm:text-sm font-medium font-['Urbanist'] mb-1">Full Name</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+              <div class="text-red-500 text-xs mt-1">{{ form.full_name.errors.0 }}</div>
+            {% endif %}
+          </div>    
+          <div>
+            <label class="block text-neutral-700 text-xs sm:text-sm font-medium font-['Urbanist'] mb-1">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>   
+          <div>
+            <label class="block text-neutral-700 text-xs sm:text-sm font-medium font-['Urbanist'] mb-1">Password</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+              <div class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</div>
+            {% endif %}
+          </div>   
+          <div>
+            <label class="block text-neutral-700 text-xs sm:text-sm font-medium font-['Urbanist'] mb-1">Confirm Password</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+              <div class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</div>
+            {% endif %}
+          </div>  
+          <div class="flex items-center accent-teal-900 focus:outline-none focus:border-gray-300">
+            <input type="checkbox" id="terms" required
+              class="w-4 h-4 text-teal-900 border-gray-300 rounded focus:ring-teal-900 cursor-pointer">
+            <label for="terms"
+              class="ml-2 text-neutral-700 text-xs sm:text-sm font-normal font-['Urbanist'] cursor-pointer select-none">
+              I agree to the Terms and Conditions
+            </label>
+          </div>
+
+
+          <!-- Social login buttons - hidden but space preserved with welcome text -->
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center mb-4 relative my-4">
+            <!-- Welcome text visible in the space -->
+            <div class="absolute inset-0 flex items-center justify-center">
+            </div>
+            <!-- Hidden buttons and divider to preserve space -->
+            <div style="visibility: hidden;">
+              <button type="button" disabled
+                class="w-full h-10 sm:w-64 md:w-72 px-5 py-2 sm:py-3 text-sm rounded-md outline outline-1 outline-stone-300 inline-flex items-center justify-center gap-2.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 disabled:hover:bg-gray-100 hover:bg-gray-200 hover:shadow-sm transition-all duration-200">
+                <img class="w-4 h-4 object-contain" src="{% static 'assets/Group 1480.svg' %}" alt="Google logo" onerror="this.style.display='none'">
+                <span class="font-medium font-['Poppins']">Sign up with Google</span>
+              </button>
+            </div>
+            <div style="visibility: hidden;">
+              <button type="button" disabled
+                class="w-full h-10 sm:w-64 md:w-72 px-5 py-2 sm:py-3 text-sm rounded-md outline outline-1 outline-stone-300 inline-flex items-center justify-center gap-2.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 disabled:hover:bg-gray-100 hover:bg-gray-200 hover:shadow-sm transition-all duration-200">
+                <img class="w-6 h-6 sm:w-8 sm:h-8 object-contain" src="{% static 'assets/fb.png' %}" alt="Facebook logo" onerror="this.style.display='none'">
+                <span class="font-medium font-['Poppins']">Sign up with Facebook</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center my-4" style="visibility: hidden;">
+            <div class="flex-1 h-px bg-gray-300"></div>
+            <span class="px-2 sm:px-4 text-neutral-700 text-xs sm:text-sm font-normal font-['Urbanist']">Or Continue With Email</span>
+            <div class="flex-1 h-px bg-gray-300"></div>
+          </div>
+
+
+          <button type="submit" class="w-full py-2 sm:py-3 bg-teal-900 hover:bg-teal-800 text-white font-medium rounded-lg transition-colors duration-200 mt-1">
+            Create Account
+          </button>
+        </form>  
+
+          <div class="text-center pt-2">
+            <span class="text-neutral-700 text-sm sm:text-base font-medium font-['Urbanist']">
+              Already have an account? 
+            </span>
+            <a href="{% url 'login' %}" class="text-teal-900 font-medium hover:underline">
+              Sign In
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const buyerBtn = document.getElementById('buyer-btn');
+    const sellerBtn = document.getElementById('seller-btn');
+    const userTypeInput = document.getElementById('id_user_type');
+
+    buyerBtn.addEventListener('click', function() {
+      // Update button styles
+      buyerBtn.className = 'w-1/2 h-full px-3 sm:px-4 py-2 bg-teal-900 text-white rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-teal-800 active:bg-teal-700';
+      sellerBtn.className = 'w-1/2 h-full px-3 sm:px-4 py-2 text-neutral-700 bg-transparent rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-gray-200 active:bg-gray-300';
+
+      // Update form value
+      userTypeInput.value = 'buyer';
+    });
+
+    sellerBtn.addEventListener('click', function() {
+      // Update button styles
+      sellerBtn.className = 'w-1/2 h-full px-3 sm:px-4 py-2 bg-teal-900 text-white rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-teal-800 active:bg-teal-700';
+      buyerBtn.className = 'w-1/2 h-full px-3 sm:px-4 py-2 text-neutral-700 bg-transparent rounded-md flex items-center justify-center gap-2.5 transition-colors hover:bg-gray-200 active:bg-gray-300';
+
+      // Update form value
+      userTypeInput.value = 'seller';
+    });
+  });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,184 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_upgrade %}Upgrade Account{% else %}Complete Registration{% endif %} - Payment Required</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                        'sans': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+        <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="font-urbanist bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-teal-100 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                </div>
+                {% if is_upgrade %}
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Upgrade Your Account</h1>
+                <p class="text-gray-600">Add {{ upgrade_role|title }} dashboard access to your account</p>
+                {% else %}
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Complete Your Registration</h1>
+                <p class="text-gray-600">One-time payment to activate your {{ user_type }} account</p>
+                {% endif %}
+            </div>
+
+            <!-- Account Info -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                {% if is_upgrade %}
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm text-gray-600">Upgrade To:</span>
+                    <span class="text-sm font-semibold text-gray-900 uppercase">{{ upgrade_role }}</span>
+                </div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm text-gray-600">Current Access:</span>
+                    <span class="text-sm font-semibold text-gray-900 uppercase">{{ current_role }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Upgrade Fee:</span>
+                    <span class="text-2xl font-bold text-teal-900">${{ amount }}</span>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm text-gray-600">Account Type:</span>
+                    <span class="text-sm font-semibold text-gray-900 uppercase">{{ user_type }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Registration Fee:</span>
+                    <span class="text-2xl font-bold text-teal-900">${{ amount }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Features -->
+            <div class="mb-6">
+                {% if is_upgrade %}
+                <p class="text-sm font-semibold text-gray-900 mb-3">You'll get access to:</p>
+                {% else %}
+                <p class="text-sm font-semibold text-gray-900 mb-3">What's included:</p>
+                {% endif %}
+                <ul class="space-y-2">
+                    {% if is_upgrade and upgrade_role == 'buyer' or not is_upgrade and user_type == 'buyer' %}
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Browse and purchase books, courses & webinars</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">AI-powered recommendations</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">24/7 AI chatbot support</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Order history and tracking</span>
+                    </li>
+                    {% else %}
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Sell unlimited books, courses & webinars</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Seller dashboard with analytics</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Direct customer messaging</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">Sales reporting and insights</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Payment Button -->
+            {% if is_upgrade %}
+            <form method="POST" action="{% url 'role_upgrade_payment' role=upgrade_role %}">
+            {% else %}
+            <form method="POST" action="{% url 'registration_payment' %}">
+            {% endif %}
+                {% csrf_token %}
+                <button type="submit" class="w-full bg-teal-900 hover:bg-teal-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors mb-4 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    {% if is_upgrade %}
+                    Upgrade Now - Pay ${{ amount }}
+                    {% else %}
+                    Proceed to Secure Payment
+                    {% endif %}
+                </button>
+            </form>
+
+            <!-- Security Note -->
+            <div class="flex items-start text-xs text-gray-500">
+                <svg class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span>Secured by Stripe. Your payment information is encrypted and never stored on our servers.</span>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %} text-sm">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6">
+            <p class="text-sm text-gray-600">
+                Need help? <a href="mailto:support@yoursite.com" class="text-teal-900 hover:underline">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

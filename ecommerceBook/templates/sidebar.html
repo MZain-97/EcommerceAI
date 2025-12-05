@@ -1,0 +1,65 @@
+{% load static %}
+<div id="sidebar" class="fixed lg:w-64 md:w-54 h-full bg-[#FFFCF5] shadow-md transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-10 overflow-y-auto">
+    <div class="p-4 h-full flex flex-col">
+        <div class="flex items-center mb-8">
+            <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-7 h-7 mr-2">
+            <span class="text-gray-700 text-lg font-bold font-['Inter'] uppercase">Logo Here</span>
+        </div>
+        <nav class="space-y-2 flex-1">
+            <a href="{% url 'seller_dashboard' %}" class="w-full">
+                <button class="w-full flex items-center px-3 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                    <img src="{% static 'assets/Buyer_Dashboard_images/3d-square.svg' %}" alt="Products" class="w-4 h-4 mr-3">
+                    <span class="text-gray-800 text-sm font-medium">Products</span>
+                </button>
+            </a>
+            <a href="#" class="w-full">
+                <button class="w-full flex items-center px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <img src="{% static 'assets/Buyer_Dashboard_images/element-4.svg' %}" alt="My Orders" class="w-4 h-4 mr-3">
+                    <span class="text-gray-800 text-sm font-medium">{% if current_mode == 'seller' %}My Sales{% else %}My Order{% endif %}</span>
+                </button>
+            </a>
+            <a href="#" class="w-full">
+                <button class="w-full flex items-center px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <img src="{% static 'assets/Buyer_Dashboard_images/headphone.svg' %}" alt="AI Support" class="w-4 h-4 mr-3">
+                    <span class="text-gray-800 text-sm font-medium">AI Support</span>
+                </button>
+            </a>
+            <a href="{% url 'settings' %}" class="w-full">
+                <button class="w-full flex items-center px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <img src="{% static 'assets/Buyer_Dashboard_images/setting-2.svg' %}" alt="Settings" class="w-4 h-4 mr-3">
+                    <span class="text-gray-800 text-sm font-medium">Settings</span>
+                </button>
+            </a>
+        </nav>
+
+        {% comment %} <!-- Dashboard Switcher and Logout at Bottom -->
+        <div class="mt-auto pt-4 border-t border-gray-200 space-y-2">
+            <!-- Dashboard Switcher -->
+            <a href="{% url 'buyer_dashboard' %}" class="w-full">
+                <button class="w-full flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    <span class="text-sm font-medium">Switch to Buyer</span>
+                </button>
+            </a> {% endcomment %}
+
+            {% comment %} <!-- Logout Button -->
+            <a href="{% url 'logout' %}" class="w-full group">
+                <button class="w-full flex items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 group-hover:shadow-sm">
+                    <svg class="w-4 h-4 mr-3 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span class="text-sm font-medium">Logout</span>
+                </button>
+            </a> {% endcomment %}
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+

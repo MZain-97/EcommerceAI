@@ -1,0 +1,786 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="/output.css" rel="stylesheet">
+    <title>Landing Page</title>
+</head>
+<style>
+    /* Add smooth transitions */
+#mobileMenu {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Prevent body scroll when menu is open */
+body.menu-open {
+    overflow: hidden;
+}
+    </style>
+<body class="font-urbanist bg-zinc-50">
+
+
+    <div class="flex flex-col min-h-screen">
+
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-2 lg:ml-2">
+            <!-- Top Navigation -->
+            <header class="bg-zinc-50 shadow-sm relative">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <div class="p-4">
+                                <div class="flex items-center">
+                                    <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-7 h-7 mr-2">
+                                    <span class="text-teal-900 text-lg font-bold font-['Inter'] uppercase">VORTEX AI</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Mobile Sidebar Menu (hidden by default) -->
+                        <div id="mobileMenu"
+                            class="fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform translate-x-full md:translate-x-0 md:hidden transition-transform duration-300 ease-in-out z-50">
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-8">
+                                    <span class="text-teal-900 text-lg font-bold">Menu</span>
+                                    <button id="closeMobileMenu" class="p-2 hover:bg-gray-100 rounded-full">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <nav class="space-y-2">
+                                    <a href="{% url 'login' %}"
+                                        class="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                                        Login
+                                    </a>
+                                    <a href="{% url 'register' %}"
+                                        class="block px-4 py-3 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors">
+                                        Sign Up
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Menu Toggle Button -->
+                        <div class="flex items-center md:hidden">
+                            <button id="mobileMenuToggle" class="p-2 rounded-md hover:bg-gray-100 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 6h16M4 12h16m-7 6h7"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Mobile Menu (hidden by default) -->
+                        <div id="mobileMenu"
+                            class="hidden md:hidden absolute top-24 right-4 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                            <a href="{% url 'login' %}"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Login</a>
+                            <a href="{% url 'register' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign
+                                Up</a>
+                        </div>
+
+                        <!-- Desktop Buttons (hidden on mobile) -->
+                        <div class="hidden md:flex space-x-4">
+                            <a href="{% url 'login' %}"
+                                class="px-8 py-2 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors duration-200">Login</a>
+                            <a href="{% url 'register' %}"
+                                class="px-8 py-2 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors duration-200">Sign Up</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- After the header -->
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div class="max-w-4xl mx-auto">
+                    <h1
+                        class="text-4xl md:text-4xl lg:text-5xl font-extrabold text-black font-['Urbanist'] leading-tight mb-6">
+                        Lorem Ipsum is simply dummy text of the printing and type setting
+                    </h1>
+                    <p
+                        class="text-lg md:text-xl text-neutral-500 font-medium font-['Urbanist'] leading-loose mb-8 max-w-3xl mx-auto">
+                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been
+                        the industry's standard dummy text ever since the 1500s.
+                    </p>
+                    <a href="{% url 'register' %}"
+                        class="px-8 py-3 bg-teal-900 text-white rounded-lg shadow-md hover:bg-teal-800 transition-colors text-sm font-normal font-['Poppins'] inline-block">
+                        Sign up
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                <!-- Category Filter -->
+                <div class="mb-6 relative inline-block text-left">
+
+                </div>
+
+                <!-- Services Section (Displayed First) -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Services</h2>
+                        <a href="{% url 'all_products' 'service' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                    {% for service in services %}
+                    <!-- Service Card -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="aspect-w-16 aspect-h-9 w-full h-48 overflow-hidden">
+                            {% if service.service_image %}
+                                <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ service.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ service.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% with rating=service.get_average_rating %}
+                                    <span class="text-sm text-gray-500 mr-1">{{ rating|floatformat:1 }}</span>
+                                    <div class="flex">
+                                        {% for i in "12345" %}
+                                            <img src="{% static 'assets/Buyer_Dashboard_images/Star 5.svg' %}" alt="star" class="w-4 h-4 {% if forloop.counter > rating %}opacity-30{% endif %}">
+                                        {% endfor %}
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if request.user.is_authenticated and service.id in purchased_service_ids %}
+                                    <!-- Chat button for purchased services -->
+                                    <a href="{% url 'service_chat' service.id %}"
+                                        class="flex-1 py-2 text-sm bg-teal-900 text-white rounded hover:bg-teal-800 transition-colors text-center font-medium">
+                                        Chat with Seller
+                                    </a>
+                                {% else %}
+                                    <!-- View Detail and Add to Cart for unpurchased services -->
+                                    {% if request.user.is_authenticated %}
+                                        <a href="{% url 'product_detail' 'service' service.id %}"
+                                            class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                            View Detail
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'login' %}"
+                                            class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                            View Detail
+                                        </a>
+                                    {% endif %}
+                                    {% if request.user.is_authenticated %}
+                                    <button onclick="addToCart('service', {{ service.id }})"
+                                            class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn"
+                                            data-product-type="service"
+                                            data-product-id="{{ service.id }}">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="col-span-4 text-center text-gray-500">No services available</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Books Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Books</h2>
+                        <a href="{% url 'all_products' 'book' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for book in books %}
+                    <!-- Book Card -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="aspect-w-16 aspect-h-9 w-full h-48 overflow-hidden">
+                            {% if book.book_image %}
+                                <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'assets/Dashboard(1)/image 1.png' %}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ book.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ book.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% with rating=book.get_average_rating %}
+                                    <span class="text-sm text-gray-500 mr-1">{{ rating|floatformat:1 }}</span>
+                                    <div class="flex">
+                                        {% for i in "12345" %}
+                                            <img src="{% static 'assets/Buyer_Dashboard_images/Star 5.svg' %}" alt="star" class="w-4 h-4 {% if forloop.counter > rating %}opacity-30{% endif %}">
+                                        {% endfor %}
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if request.user.is_authenticated %}
+                                    <a href="{% url 'product_detail' 'book' book.id %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'login' %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% endif %}
+                                {% if request.user.is_authenticated %}
+                                <button onclick="addToCart('book', {{ book.id }})"
+                                        class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn"
+                                        data-product-type="book"
+                                        data-product-id="{{ book.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="col-span-4 text-center text-gray-500">No books available</p>
+                    {% endfor %}
+                </div>
+                <!-- webinar -->
+                <!-- Products Grid -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto">
+                    <div class="flex justify-between items-center mt-12">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Webinar</h2>
+                        <a href="{% url 'all_products' 'webinar' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for webinar in webinars %}
+                    <!-- Webinar Card -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="aspect-w-16 aspect-h-9 w-full h-48 overflow-hidden">
+                            {% if webinar.webinar_image %}
+                                <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'assets/Dashboard(1)/image 5.png' %}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ webinar.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ webinar.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% with rating=webinar.get_average_rating %}
+                                    <span class="text-sm text-gray-500 mr-1">{{ rating|floatformat:1 }}</span>
+                                    <div class="flex">
+                                        {% for i in "12345" %}
+                                            <img src="{% static 'assets/Buyer_Dashboard_images/Star 5.svg' %}" alt="star" class="w-4 h-4 {% if forloop.counter > rating %}opacity-30{% endif %}">
+                                        {% endfor %}
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if request.user.is_authenticated %}
+                                    <a href="{% url 'product_detail' 'webinar' webinar.id %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'login' %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% endif %}
+                                {% if request.user.is_authenticated %}
+                                <button onclick="addToCart('webinar', {{ webinar.id }})"
+                                        class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn"
+                                        data-product-type="webinar"
+                                        data-product-id="{{ webinar.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="col-span-4 text-center text-gray-500">No webinars available</p>
+                    {% endfor %}
+                </div>
+                <!-- courses -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto">
+                    <div class="flex justify-between items-center mt-12">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Courses</h2>
+                        <a href="{% url 'all_products' 'course' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for course in courses %}
+                    <!-- Course Card -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="aspect-w-16 aspect-h-9 w-full h-48 overflow-hidden">
+                            {% if course.course_image %}
+                                <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'assets/Dashboard(1)/image 5.png' %}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ course.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% with rating=course.get_average_rating %}
+                                    <span class="text-sm text-gray-500 mr-1">{{ rating|floatformat:1 }}</span>
+                                    <div class="flex">
+                                        {% for i in "12345" %}
+                                            <img src="{% static 'assets/Buyer_Dashboard_images/Star 5.svg' %}" alt="star" class="w-4 h-4 {% if forloop.counter > rating %}opacity-30{% endif %}">
+                                        {% endfor %}
+                                    </div>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if request.user.is_authenticated %}
+                                    <a href="{% url 'product_detail' 'course' course.id %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'login' %}"
+                                        class="flex-1 py-2 text-sm text-center border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        View Detail
+                                    </a>
+                                {% endif %}
+                                {% if request.user.is_authenticated %}
+                                <button onclick="addToCart('course', {{ course.id }})"
+                                        class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn"
+                                        data-product-type="course"
+                                        data-product-id="{{ course.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="col-span-4 text-center text-gray-500">No courses available</p>
+                    {% endfor %}
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-zinc-50 py-4">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+                        <div class="flex space-x-6 mt-4 md:mt-0">
+                            <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                            <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+                        </div>
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <!-- Social Icons -->
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+
+        function openMobileMenu() {
+            mobileMenu.classList.remove('translate-x-full');
+            mobileMenuOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenuFunc() {
+            mobileMenu.classList.add('translate-x-full');
+            mobileMenuOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        mobileMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openMobileMenu();
+        });
+
+        closeMobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMobileMenuFunc();
+        });
+
+        mobileMenuOverlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMobileMenuFunc();
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                closeMobileMenuFunc();
+            }
+        });
+
+        // Close menu when pressing Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMobileMenuFunc();
+            }
+        });
+    </script>
+    <script>
+        function openMobileMenu() {
+            mobileMenu.classList.remove('translate-x-full');
+            mobileMenuOverlay.classList.remove('hidden');
+            document.body.classList.add('menu-open');
+        }
+
+        function closeMobileMenuFunc() {
+            mobileMenu.classList.add('translate-x-full');
+            mobileMenuOverlay.classList.add('hidden');
+            document.body.classList.remove('menu-open');
+        }
+    </script>
+
+    <!-- Chatbot Floating Icon -->
+    <button id="chatbotToggle" class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-teal-900 text-white shadow-lg hover:scale-105 transition-transform flex items-center justify-center" aria-label="Open Chatbot">
+        <i class="fa-solid fa-robot text-2xl" aria-hidden="true"></i>
+    </button>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbotWidget" class="hidden fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="bg-teal-900 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-robot text-xl"></i>
+                <h3 class="font-semibold text-lg">AI Support</h3>
+            </div>
+            <button id="closeChatbot" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <!-- Welcome Message -->
+            <div class="flex items-start space-x-2">
+                <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                    <p class="text-sm text-gray-800">Hello! How can I help you today?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="border-t border-gray-200 p-4 bg-white rounded-b-lg">
+            <form id="chatForm" class="flex space-x-2">
+                <input
+                    type="text"
+                    id="chatInput"
+                    placeholder="Type your message..."
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                    required
+                >
+                <button
+                    type="submit"
+                    class="px-4 py-2 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Chatbot widget functionality
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotWidget = document.getElementById('chatbotWidget');
+        const closeChatbot = document.getElementById('closeChatbot');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Toggle chatbot
+        chatbotToggle.addEventListener('click', () => {
+            chatbotWidget.classList.toggle('hidden');
+            if (!chatbotWidget.classList.contains('hidden')) {
+                chatInput.focus();
+            }
+        });
+
+        // Close chatbot
+        closeChatbot.addEventListener('click', () => {
+            chatbotWidget.classList.add('hidden');
+        });
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            chatInput.value = '';
+
+            // Create AI message container
+            const aiMessageDiv = createAIMessageContainer();
+            const aiTextElement = aiMessageDiv.querySelector('.ai-text');
+
+            // Show typing indicator
+            aiTextElement.innerHTML = '<div class="flex space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>';
+
+            try {
+                const csrftoken = getCookie('csrftoken');
+                // Send message to chatbot API
+                const response = await fetch('{% url "chatbot_message" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.response) {
+                    // Simulate typing effect
+                    aiTextElement.textContent = '';
+                    let index = 0;
+                    const text = data.response;
+                    const typeSpeed = 20; // milliseconds per character
+
+                    function typeChar() {
+                        if (index < text.length) {
+                            aiTextElement.textContent += text.charAt(index);
+                            index++;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            setTimeout(typeChar, typeSpeed);
+                        }
+                    }
+                    typeChar();
+                } else {
+                    const errorMsg = data.message || data.error || 'An error occurred';
+                    console.error('Backend error:', errorMsg);
+                    aiTextElement.textContent = `Error: ${errorMsg}`;
+                }
+            } catch (error) {
+                console.error('Chatbot error:', error);
+                aiTextElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-2';
+
+            if (sender === 'user') {
+                messageDiv.classList.add('flex-row-reverse', 'space-x-reverse');
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-user text-white text-sm"></i>
+                    </div>
+                    <div class="bg-teal-900 text-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm text-gray-800">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function createAIMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-2';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                    <p class="text-sm text-gray-800 ai-text"></p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
+    <!-- Add to Cart Functionality -->
+    <script>
+        function addToCart(productType, productId) {
+            // Get CSRF token
+            const csrftoken = getCookie('csrftoken');
+
+            // Send request to add item to cart
+            fetch(`/add-to-cart/${productType}/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success notification
+                    showNotification(data.message || 'Added to cart successfully!', 'success');
+
+                    // Update cart count if element exists
+                    const cartCountElement = document.getElementById('cart-count');
+                    if (cartCountElement && data.cart_count) {
+                        cartCountElement.textContent = data.cart_count;
+                    }
+                } else {
+                    showNotification(data.message || 'Failed to add to cart', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred. Please try again.', 'error');
+            });
+        }
+
+        // Show notification function
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${
+                type === 'success'
+                    ? 'bg-green-100 border border-green-400 text-green-700'
+                    : 'bg-red-100 border border-red-400 text-red-700'
+            }`;
+            notification.textContent = message;
+
+            // Add to DOM
+            document.body.appendChild(notification);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,850 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Order</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/src/tailwind-config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* Fix for dropdown visibility in table with horizontal scroll */
+    .table-dropdown-container {
+      overflow-x: auto;
+      overflow-y: visible !important;
+    }
+
+    /* Ensure table rows allow dropdown overflow */
+    table tr {
+      position: relative;
+    }
+
+    /* Make dropdown menus appear above everything */
+    [id^="dropdown-"] {
+      z-index: 9999 !important;
+    }
+
+    /* Toast notification animations */
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+    .toast-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    .toast-exit {
+      animation: slideOutRight 0.3s ease-out;
+    }
+  </style>
+
+</head>
+<body class="font-urbanist bg-background-main text-primary min-h-screen">
+
+  <section id="settings-page">
+    <div class="flex flex-col md:flex-row min-h-screen w-full bg-[#FFFCF5]">
+
+      <!-- Dynamic Sidebar -->
+      {% if current_mode == 'seller' %}
+          {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='orders' %}
+      {% else %}
+          {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='orders' %}
+      {% endif %}
+
+      <!-- Mobile Header -->
+      <div class="flex items-center justify-between p-4 bg-[#FFFCF5] md:hidden">
+        <div class="flex items-center">
+          <img src="/assets/logo.svg" alt="logo-icon" class="w-7 h-7 mr-2">
+          <span class="font-inter font-bold text-lg text-primary">Logo</span>
+        </div>
+        <button id="mobileMenuButton" class="p-2 rounded-lg bg-[#FFFCF5] hover:bg-gray-100 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Mobile Menu Overlay -->
+      <div id="mobileMenuOverlay" class="hidden md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300"></div>
+      
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="hidden md:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#FFFCF5] shadow-xl z-50 transform -translate-x-full transition-transform duration-300">
+        <div class="p-4 md:p-6">
+          <div class="flex items-center justify-between mb-6 md:mb-8">
+            <div class="flex items-center">
+              <img src="/assets/logo.svg" alt="logo-icon" class="w-7 h-7 mr-2">
+              <span class="font-inter font-bold text-lg text-primary">Logo</span>
+            </div>
+            <button id="mobileMenuClose" class="text-primary p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <nav class="space-y-2 md:space-y-3">
+            <a href="#" class="flex items-center px-4 py-3 bg-gray-200 rounded-lg text-primary">
+              <img src="/assets/products.svg" alt="Products Icon" class="w-5 h-5 mr-3">
+              <span class="text-base font-medium">Products</span>
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+              <img src="/assets/my order.svg" alt="My Order Icon" class="w-5 h-5 mr-3">
+              <span class="text-base font-medium text-gray-800">My Order</span>
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+              <img src="/Cart assets/headphone.svg" alt="AI Support Icon" class="w-5 h-5 mr-3">
+              <span class="text-base font-medium text-gray-800">AI Support</span>
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+              <img src="/assets/setting.svg" alt="Setting Icon" class="w-5 h-5 mr-3">
+              <span class="text-base font-medium text-gray-800">Setting</span>
+            </a>
+
+          </nav>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col bg-[#FBFBFC] min-h-screen md:ml-44 lg:ml-64">
+        <div class="flex-1 flex flex-col p-3 md:p-6 lg:p-8 overflow-hidden">
+          <header class="flex-none">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 md:gap-4 mb-3 md:mb-6">
+              <h1 class="font-urbanist font-bold text-xl md:text-2xl">
+                {% if current_mode == 'seller' %}My Sales{% else %}My Orders{% endif %}
+              </h1>
+              <div class="items-center gap-2 hidden md:gap-3 md:block md:flex w-full lg:w-auto">
+                <!-- Search Bar (Left) -->
+                
+                
+                <!-- Notification Icon -->
+                <button class="hidden md:block p-2 rounded-full hover:bg-gray-100">
+                  <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                      </path>
+                  </svg>
+              </button>
+                
+              <div class="hidden md:flex items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                    {% if user.profile_image %}
+                        <img src="{{ user.profile_image.url }}" alt="{{ user.full_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                            <span class="text-gray-600 text-sm font-medium">{{ user.full_name|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+              </div>
+            </div>
+
+            <!-- Profile Header -->
+            
+          </header>
+
+          <!-- Order Table with Horizontal Scrolling -->
+          <div class="bg-white rounded-2xl shadow-sm mt-6">
+            <!-- Scrollable Container -->
+            <div class="table-dropdown-container">
+              <!-- Proper HTML Table -->
+              <table class="min-w-full divide-y divide-gray-200">
+                <!-- Table Header -->
+                <thead class="bg-zinc-100">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Order No.</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Product Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">
+                      {% if current_mode == 'seller' %}Buyer Name{% else %}Seller Name{% endif %}
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-teal-900 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+
+                <!-- Table Body -->
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {% if orders %}
+                    {% for order in orders %}
+                      {% for item in order.items.all %}
+                        <tr class="hover:bg-gray-50">
+                          <!-- Order Number with Image -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                              {% if item.content_type.model == 'book' and item.content_object.book_image %}
+                                <img src="{{ item.content_object.book_image.url }}" alt="Book cover" class="w-8 h-8 rounded mr-3 object-cover">
+                              {% elif item.content_type.model == 'course' and item.content_object.course_image %}
+                                <img src="{{ item.content_object.course_image.url }}" alt="Course cover" class="w-8 h-8 rounded mr-3 object-cover">
+                              {% elif item.content_type.model == 'webinar' and item.content_object.webinar_image %}
+                                <img src="{{ item.content_object.webinar_image.url }}" alt="Webinar cover" class="w-8 h-8 rounded mr-3 object-cover">
+                              {% else %}
+                                <div class="w-8 h-8 bg-gray-200 rounded mr-3 flex items-center justify-center">
+                                  {% if item.content_type.model == 'book' %}
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                  {% elif item.content_type.model == 'course' %}
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                                    </svg>
+                                  {% else %}
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                  {% endif %}
+                                </div>
+                              {% endif %}
+                              <span class="text-sm font-medium text-teal-900">#{{ order.order_number }}</span>
+                            </div>
+                          </td>
+
+                          <!-- Product Name -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-teal-900">{{ item.content_object.title }}</div>
+                          </td>
+
+                          <!-- Seller/Buyer Name -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-teal-900">
+                              {% if current_mode == 'seller' %}
+                                {{ order.user.full_name|default:"N/A" }}
+                              {% else %}
+                                {{ item.content_object.seller.full_name|default:"N/A" }}
+                              {% endif %}
+                            </div>
+                          </td>
+
+                          <!-- Price -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-teal-900">${{ item.price }}</div>
+                          </td>
+
+                          <!-- Date -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-teal-900">{{ order.created_at|date:"Y-m-d" }}</div>
+                          </td>
+
+                          <!-- Status -->
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full
+                              {% if order.status == 'completed' %}bg-green-100 text-green-800
+                              {% elif order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                              {% else %}bg-red-100 text-red-800{% endif %}">
+                              {{ order.get_status_display }}
+                            </span>
+                          </td>
+
+                          <!-- Action -->
+                          <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="inline-block text-left">
+                              <button type="button"
+                                onclick="toggleDropdown('dropdown-{{ order.id }}-{{ item.id }}', this)"
+                                class="inline-flex justify-center w-8 h-8 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 items-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="7" class="px-6 py-12 text-center">
+                        <div class="text-gray-500">
+                          <div class="mb-4">
+                            <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          </div>
+                          <h3 class="text-lg font-medium text-gray-700 mb-2">
+                            {% if current_mode == 'seller' %}No sales yet{% else %}No orders yet{% endif %}
+                          </h3>
+                          <p class="text-sm text-gray-500">
+                            {% if current_mode == 'seller' %}
+                              When customers purchase your products, they will appear here.
+                            {% else %}
+                              When you purchase products, they will appear here.
+                            {% endif %}
+                          </p>
+                          <a href="{% if current_mode == 'seller' %}{% url 'seller_dashboard' %}{% else %}{% url 'buyer_dashboard' %}{% endif %}" class="inline-block mt-4 px-4 py-2 bg-teal-900 text-white text-sm rounded-md hover:bg-teal-800 transition-colors">
+                            {% if current_mode == 'seller' %}Go to Dashboard{% else %}Browse Products{% endif %}
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+          </div>
+
+      </main>
+
+      <!-- Dropdown Menus Container (Fixed Position - Outside Table) -->
+          <div id="dropdowns-container">
+            {% if orders %}
+              {% for order in orders %}
+                {% for item in order.items.all %}
+                  <!-- Dropdown Menu -->
+                  <div id="dropdown-{{ order.id }}-{{ item.id }}"
+                    class="hidden fixed w-40 bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none" style="z-index: 9999;">
+                    <div class="py-1">
+                      {% if current_mode == 'buyer' %}
+                        {% if order.status == 'completed' %}
+                          <button onclick="downloadProduct({{ order.id }}, {{ item.id }}, '{{ item.content_object.title }}')"
+                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Download
+                          </button>
+                          <button onclick="openRatingModal({{ item.id }}, '{{ item.content_object.title }}', {% if item.user_rating %}{{ item.user_rating.rating }}{% else %}0{% endif %})"
+                            class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                            </svg>
+                            {% if item.user_rating %}Edit Rating{% else %}Rate Product{% endif %}
+                          </button>
+                        {% endif %}
+                        <button onclick="deleteOrder('{{ order.id }}', '{{ item.id }}')"
+                          class="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                          Delete
+                        </button>
+                      {% else %}
+                        <!-- Seller mode: View details only -->
+                        <button onclick="viewOrderDetails('{{ order.id }}', '{{ item.id }}')"
+                          class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                          </svg>
+                          View
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            {% endif %}
+          </div>
+
+        </div>
+          </div>
+
+      </main>
+      <footer class="bg-zinc-50 py-4">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                    <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+                </div>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <!-- Social Icons -->
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    </div>
+  </section>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-overlay">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 modal-content">
+      <div class="flex items-start mb-4">
+        <div id="modalIcon" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4">
+          <!-- Icon will be inserted here -->
+        </div>
+        <div class="flex-1">
+          <h3 id="modalTitle" class="text-lg font-bold text-gray-900 mb-2"></h3>
+          <p id="modalMessage" class="text-sm text-gray-600"></p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button id="modalCancel" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+          Cancel
+        </button>
+        <button id="modalConfirm" class="flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toast notification system
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+
+      // Define styles and icons for different toast types
+      const styles = {
+        success: {
+          bg: 'bg-gradient-to-r from-green-500 to-emerald-600',
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                 </svg>`
+        },
+        error: {
+          bg: 'bg-gradient-to-r from-red-500 to-rose-600',
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                 </svg>`
+        },
+        info: {
+          bg: 'bg-gradient-to-r from-blue-500 to-cyan-600',
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                 </svg>`
+        }
+      };
+
+      const style = styles[type] || styles.info;
+
+      toast.className = `fixed top-4 right-4 ${style.bg} text-white px-5 py-3.5 rounded-xl shadow-2xl z-50 toast-enter flex items-center space-x-3 max-w-sm`;
+      toast.innerHTML = `
+        <div class="flex-shrink-0">
+          ${style.icon}
+        </div>
+        <p class="text-sm font-medium flex-1">${message}</p>
+        <button onclick="this.parentElement.remove()" class="flex-shrink-0 hover:bg-white/20 rounded-full p-1 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      `;
+
+      document.body.appendChild(toast);
+
+      // Auto-remove after 4 seconds
+      setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Convenience functions
+    function showSuccess(message) {
+      showToast(message, 'success');
+    }
+
+    function showError(message) {
+      showToast(message, 'error');
+    }
+
+    function showInfo(message) {
+      showToast(message, 'info');
+    }
+
+    // Enhanced Mobile Menu
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      const mobileMenuClose = document.getElementById('mobileMenuClose');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+      
+      function openMobileMenu() {
+        mobileMenu.classList.remove('hidden', '-translate-x-full');
+        mobileMenuOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function closeMobileMenu() {
+        mobileMenu.classList.add('-translate-x-full');
+        mobileMenuOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+        setTimeout(() => {
+          if (mobileMenu.classList.contains('-translate-x-full')) {
+            mobileMenu.classList.add('hidden');
+          }
+        }, 300);
+      }
+      
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+      }
+      
+      if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+      }
+      
+      if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+      }
+      
+      // Close menu on escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+          closeMobileMenu();
+        }
+      });
+      
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768 && !mobileMenu.classList.contains('hidden')) {
+          closeMobileMenu();
+        }
+      });
+
+      // Action dropdown functionality with fixed positioning
+      window.toggleDropdown = function(dropdownId, buttonElement) {
+        const dropdown = document.getElementById(dropdownId);
+        const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+
+        // Close all other dropdowns
+        allDropdowns.forEach(d => {
+          if (d.id !== dropdownId) {
+            d.classList.add('hidden');
+          }
+        });
+
+        // Toggle current dropdown
+        const isHidden = dropdown.classList.contains('hidden');
+
+        if (isHidden) {
+          // Calculate position based on button
+          const rect = buttonElement.getBoundingClientRect();
+
+          // Position dropdown below and to the right of button
+          dropdown.style.position = 'fixed';
+          dropdown.style.top = (rect.bottom + 5) + 'px';
+          dropdown.style.left = (rect.right - 160) + 'px'; // 160px is dropdown width (w-40)
+          dropdown.style.zIndex = '9999';
+
+          dropdown.classList.remove('hidden');
+        } else {
+          dropdown.classList.add('hidden');
+        }
+      }
+
+      // Close all dropdowns function
+      window.closeAllDropdowns = function() {
+        const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+        allDropdowns.forEach(dropdown => {
+          dropdown.classList.add('hidden');
+        });
+      }
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', function(event) {
+        // Check if click is on dropdown button or inside dropdown
+        const isDropdownButton = event.target.closest('button[onclick*="toggleDropdown"]');
+        const isInsideDropdown = event.target.closest('[id^="dropdown-"]');
+
+        if (!isDropdownButton && !isInsideDropdown) {
+          window.closeAllDropdowns();
+        }
+      });
+
+      // Download product function
+      window.downloadProduct = function(orderId, itemId, productTitle) {
+        // Close dropdown
+        window.closeAllDropdowns();
+
+        // Create a temporary form to trigger file download
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = `/download-product/${orderId}/${itemId}/`;
+        form.style.display = 'none';
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // Show success message
+        setTimeout(() => {
+          showSuccess(`Downloading ${productTitle}...`);
+        }, 100);
+      }
+
+      // Show confirmation modal
+      window.showConfirmModal = function(title, message, onConfirm, type = 'warning') {
+        const modal = document.getElementById('confirmModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const modalCancel = document.getElementById('modalCancel');
+
+        // Set content
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+
+        // Set icon and colors based on type
+        if (type === 'warning') {
+          modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-orange-100';
+          modalIcon.innerHTML = `<svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>`;
+          modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-orange-500 hover:bg-orange-600';
+        } else if (type === 'danger') {
+          modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-red-100';
+          modalIcon.innerHTML = `<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>`;
+          modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-red-500 hover:bg-red-600';
+        } else {
+          modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-teal-100';
+          modalIcon.innerHTML = `<svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>`;
+          modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-teal-600 hover:bg-teal-700';
+        }
+
+        // Show modal
+        modal.classList.remove('hidden');
+
+        // Handle confirm
+        modalConfirm.onclick = () => {
+          modal.classList.add('hidden');
+          if (onConfirm) onConfirm();
+        };
+
+        // Handle cancel
+        modalCancel.onclick = () => {
+          modal.classList.add('hidden');
+        };
+
+        // Close on background click
+        modal.onclick = (e) => {
+          if (e.target === modal) {
+            modal.classList.add('hidden');
+          }
+        };
+
+        // Close on escape key
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            modal.classList.add('hidden');
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+
+      // Delete order function
+      window.deleteOrder = function(orderId, itemId) {
+        // Close dropdown
+        window.closeAllDropdowns();
+
+        showConfirmModal(
+          'Delete Order?',
+          'Are you sure you want to delete this order? This action cannot be undone.',
+          () => {
+            // For now, just show a toast. You can implement actual deletion later
+            showInfo('Delete functionality will be implemented soon.');
+
+            // TODO: Implement actual order deletion
+            // fetch('/delete-order/' + orderId + '/' + itemId + '/', {
+            //     method: 'POST',
+            //     headers: {
+            //         'X-CSRFToken': getCSRFToken(),
+            //     },
+            // })
+            // .then(response => response.json())
+            // .then(data => {
+            //     if (data.success) {
+            //         showSuccess('Order deleted successfully');
+            //         setTimeout(() => location.reload(), 1000);
+            //     } else {
+            //         showError('Error: ' + data.message);
+            //     }
+            // });
+          },
+          'danger'
+        );
+      }
+
+      // Get CSRF token from cookie
+      window.getCSRFToken = function() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+      }
+
+      // View order details function (for seller mode)
+      window.viewOrderDetails = function(orderId, itemId) {
+        // Close dropdown
+        window.closeAllDropdowns();
+
+        // Show order details
+        showInfo('Order details view will be implemented soon.');
+      }
+    });
+  </script>
+
+  <!-- Rating Modal -->
+  <div id="ratingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-900" id="ratingModalTitle">Rate Product</h3>
+        <button onclick="closeRatingModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-gray-600 mb-4" id="ratingProductName"></p>
+
+      <!-- Star Rating -->
+      <div class="flex items-center justify-center gap-2 mb-6">
+        <span class="text-sm text-gray-600">Rating:</span>
+        <div class="flex gap-1" id="starContainer">
+          <button onclick="setRating(1)" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors">★</button>
+          <button onclick="setRating(2)" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors">★</button>
+          <button onclick="setRating(3)" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors">★</button>
+          <button onclick="setRating(4)" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors">★</button>
+          <button onclick="setRating(5)" class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors">★</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3">
+        <button onclick="closeRatingModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+          Cancel
+        </button>
+        <button onclick="submitRating()" class="flex-1 px-4 py-2 bg-teal-900 text-white rounded-md hover:bg-teal-800">
+          Submit Rating
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating JavaScript -->
+  <script>
+    let currentOrderItemId = null;
+    let currentRating = 0;
+
+    function openRatingModal(itemId, productTitle, existingRating) {
+      currentOrderItemId = itemId;
+      currentRating = existingRating || 0;
+
+      document.getElementById('ratingModalTitle').textContent = existingRating > 0 ? 'Edit Rating' : 'Rate Product';
+      document.getElementById('ratingProductName').textContent = productTitle;
+      document.getElementById('ratingModal').classList.remove('hidden');
+
+      // Set existing rating stars
+      setRating(currentRating);
+    }
+
+    function closeRatingModal() {
+      document.getElementById('ratingModal').classList.add('hidden');
+      currentOrderItemId = null;
+      currentRating = 0;
+    }
+
+    function setRating(rating) {
+      currentRating = rating;
+      const stars = document.querySelectorAll('.star-btn');
+
+      stars.forEach((star, index) => {
+        if (index < rating) {
+          star.classList.remove('text-gray-300');
+          star.classList.add('text-yellow-400');
+        } else {
+          star.classList.remove('text-yellow-400');
+          star.classList.add('text-gray-300');
+        }
+      });
+    }
+
+    function submitRating() {
+      if (currentRating === 0) {
+        showError('Please select a rating before submitting.');
+        return;
+      }
+
+      fetch(`/rate-product/${currentOrderItemId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': window.getCSRFToken(),
+        },
+        body: JSON.stringify({
+          rating: currentRating
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showSuccess(data.message);
+          closeRatingModal();
+          setTimeout(() => location.reload(), 1000); // Refresh to show updated rating after toast
+        } else {
+          showError('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showError('Failed to submit rating. Please try again.');
+      });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('ratingModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRatingModal();
+      }
+    });
+  </script>
+</body>
+</html>

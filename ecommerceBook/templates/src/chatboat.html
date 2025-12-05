@@ -1,0 +1,769 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/src/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Custom scrollbar */
+        #messagesContainer::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #messagesContainer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        #messagesContainer::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        #messagesContainer::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Professional AI Response Styling */
+        .ai-response {
+            line-height: 1.7;
+        }
+
+        .ai-response h1,
+        .ai-response h2,
+        .ai-response h3 {
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            color: #1f2937;
+        }
+
+        .ai-response h1 {
+            font-size: 1.5em;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.3em;
+        }
+
+        .ai-response h2 {
+            font-size: 1.3em;
+        }
+
+        .ai-response h3 {
+            font-size: 1.1em;
+        }
+
+        .ai-response p {
+            margin-bottom: 1em;
+            color: #374151;
+        }
+
+        .ai-response ul,
+        .ai-response ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .ai-response li {
+            margin: 0.5em 0;
+            color: #374151;
+        }
+
+        .ai-response ul li {
+            list-style-type: disc;
+        }
+
+        .ai-response ol li {
+            list-style-type: decimal;
+        }
+
+        .ai-response code {
+            background-color: #f3f4f6;
+            padding: 0.2em 0.4em;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #dc2626;
+        }
+
+        .ai-response pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1em;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .ai-response pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+            font-size: 0.875em;
+            line-height: 1.6;
+        }
+
+        .ai-response blockquote {
+            border-left: 4px solid #0d9488;
+            padding-left: 1em;
+            margin: 1em 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .ai-response a {
+            color: #0d9488;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .ai-response a:hover {
+            color: #0f766e;
+        }
+
+        .ai-response strong {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .ai-response em {
+            font-style: italic;
+        }
+
+        .ai-response table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        .ai-response th,
+        .ai-response td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5em;
+            text-align: left;
+        }
+
+        .ai-response th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        .ai-response hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 1.5em 0;
+        }
+
+        /* Code block copy button */
+        .code-block-wrapper {
+            position: relative;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: 0.5em;
+            right: 0.5em;
+            background: #0d9488;
+            color: white;
+            border: none;
+            padding: 0.25em 0.75em;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75em;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .code-block-wrapper:hover .copy-code-btn {
+            opacity: 1;
+        }
+
+        .copy-code-btn:hover {
+            background: #0f766e;
+        }
+
+        /* Typing indicator animation */
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        .typing-indicator span {
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    </style>
+
+</head>
+
+<body class="font-urbanist bg-background-main text-primary min-h-screen">
+
+    <section id="settings-page">
+        <div class="flex flex-col md:flex-row min-h-screen w-full bg-[#FFFCF5]">
+
+            <!-- Dynamic Sidebar -->
+            {% if user.user_type == 'seller' %}
+                {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='chatbot' %}
+            {% else %}
+                {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='chatbot' %}
+            {% endif %}
+
+            <!-- Mobile Header -->
+            <div class="items-center justify-between p-4 bg-[#FFFCF5] hidden">
+                <div class="flex items-center hidden md:block">
+                    <img src="/assets/logo.svg" alt="logo-icon" class="w-7 h-7 mr-2">
+                    <span class="font-inter font-bold text-lg text-primary">Logo</span>
+                </div>
+                <button id="mobileMenuButton" class="p-2 rounded-lg bg-[#FFFCF5] hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Overlay -->
+            <div id="mobileMenuOverlay"
+                class="hidden md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300">
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu"
+                class="hidden md:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#FFFCF5] shadow-xl z-50 transform -translate-x-full transition-transform duration-300">
+                <div class="p-4 md:p-6">
+                    <div class="flex items-center justify-between mb-6 md:mb-8">
+                        <div class="flex items-center">
+                            <img src="/assets/logo.svg" alt="logo-icon" class="w-7 h-7 mr-2">
+                            <span class="font-inter font-bold text-lg text-primary">Logo</span>
+                        </div>
+                        <button id="mobileMenuClose"
+                            class="text-primary p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <nav class="space-y-2 md:space-y-3">
+                        <a href="#" class="flex items-center px-4 py-3 bg-gray-200 rounded-lg text-primary">
+                            <img src="/assets/products.svg" alt="Products Icon" class="w-5 h-5 mr-3">
+                            <span class="text-base font-medium">Products</span>
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+                            <img src="/assets/my order.svg" alt="My Order Icon" class="w-5 h-5 mr-3">
+                            <span class="text-base font-medium text-gray-800">My Order</span>
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+                            <img src="/Cart assets/headphone.svg" alt="AI Support Icon" class="w-5 h-5 mr-3">
+                            <span class="text-base font-medium text-gray-800">AI Support</span>
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors">
+                            <img src="/assets/setting.svg" alt="Setting Icon" class="w-5 h-5 mr-3">
+                            <span class="text-base font-medium text-gray-800">Setting</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="flex-1 flex flex-col bg-[#FBFBFC] h-screen md:ml-[11.25rem] lg:ml-64">
+                <div class="flex flex-col h-full">
+                    <!-- Fixed Header -->
+                    <header class="flex-none bg-[#FBFBFC] p-4 md:p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <h1 class="font-urbanist font-bold text-lg sm:text-xl md:text-2xl text-teal-900">AI Support</h1>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <!-- Mobile menu button -->
+                                <button id="sidebarToggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                </button>
+                                <!-- New Chat Button -->
+                                <button id="newChatButton" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-900 hover:bg-teal-800 text-white transition-colors text-sm font-medium shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    <span>New Chat</span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Scrollable Messages Container -->
+                    <div id="messagesContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+                        <!-- Messages will be dynamically added here -->
+                        <div class="text-center text-gray-400 mt-20">
+                            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                            </svg>
+                            <p class="text-sm font-medium">Start a conversation</p>
+                            <p class="text-xs mt-1">Ask me about books, courses, or webinars</p>
+                        </div>
+                    </div>
+
+                    <!-- Fixed Input Container -->
+                    <div class="flex-none bg-white border-t border-gray-200 p-4">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-2xl shadow-sm border border-gray-200 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-200 transition-all">
+                                <input type="text"
+                                       placeholder="Ask anything about our products..."
+                                       class="flex-1 bg-transparent border-none focus:outline-none text-gray-700 placeholder-gray-400 text-sm sm:text-base font-normal font-['Urbanist']"
+                                       id="chatInput">
+                                <button id="sendButton" class="p-2.5 rounded-full bg-teal-900 hover:bg-teal-800 text-white transition-all hover:scale-105 shadow-md">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script>
+        // Enhanced Mobile Menu
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenuClose = document.getElementById('mobileMenuClose');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+            function openMobileMenu() {
+                mobileMenu.classList.remove('hidden', '-translate-x-full');
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                mobileMenu.classList.add('-translate-x-full');
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    if (mobileMenu.classList.contains('-translate-x-full')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }, 300);
+            }
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', openMobileMenu);
+            }
+
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            }
+
+            // Close menu on escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 768 && !mobileMenu.classList.contains('hidden')) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Sidebar Toggle for Mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+
+            function toggleSidebar() {
+                const isHidden = sidebar.classList.contains('hidden');
+                if (isHidden) {
+                    // Show sidebar without dark overlay
+                    sidebar.classList.remove('hidden');
+                    // allow slide-in
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    // Hide sidebar
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.add('hidden');
+                }
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+
+            // Ensure overlay click only closes the mobile menu, not toggle the sidebar
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', function() {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        closeMobileMenu();
+                    }
+                });
+            }
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 768 && !sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                    if (!sidebar.classList.contains('hidden')) {
+                        toggleSidebar();
+                    }
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        });
+    </script>
+
+    <!-- Chatbot Functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const newChatButton = document.getElementById('newChatButton');
+
+            // Get or create session ID
+            let sessionId = localStorage.getItem('chatSessionId');
+
+            // Load chat history on page load
+            async function loadChatHistory() {
+                if (!sessionId) return;
+
+                try {
+                    const response = await fetch(`{% url "chatbot_message" %}?session_id=${sessionId}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.messages && data.messages.length > 0) {
+                        // Clear existing messages and empty state
+                        messagesContainer.innerHTML = '';
+
+                        // Display all messages
+                        data.messages.forEach(msg => {
+                            messagesContainer.appendChild(createUserMessage(msg.question));
+                            messagesContainer.appendChild(createAIMessage(msg.answer));
+                        });
+
+                        // Scroll to bottom
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                } catch (error) {
+                    console.error('Error loading chat history:', error);
+                }
+            }
+
+            // Load history on page load
+            loadChatHistory();
+
+            // Function to create user message element
+            function createUserMessage(text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex justify-end animate-fadeIn';
+                messageDiv.innerHTML = `
+                    <div class="max-w-[80%] md:max-w-[70%]">
+                        <div class="bg-gradient-to-br from-teal-900 to-teal-800 rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
+                            <p class="text-white text-sm sm:text-base font-medium leading-relaxed">
+                                ${text}
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-end gap-2 mt-1 px-2">
+                            <span class="text-xs text-gray-400">${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                            <svg class="w-3 h-3 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                `;
+                return messageDiv;
+            }
+
+            // Configure Marked.js for better rendering
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    highlight: function(code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (err) {}
+                        }
+                        return hljs.highlightAuto(code).value;
+                    }
+                });
+            }
+
+            // Function to process markdown and add code copy buttons
+            function processMarkdown(text) {
+                if (typeof marked === 'undefined') {
+                    return text.replace(/\n/g, '<br>');
+                }
+
+                // Convert markdown to HTML
+                let html = marked.parse(text);
+
+                // Add copy buttons to code blocks
+                html = html.replace(/<pre><code(.*?)>([\s\S]*?)<\/code><\/pre>/g, function(match, attributes, code) {
+                    const copyBtn = '<button class="copy-code-btn" onclick="copyCode(this)">Copy</button>';
+                    return '<div class="code-block-wrapper"><pre><code' + attributes + '>' + code + '</code></pre>' + copyBtn + '</div>';
+                });
+
+                return html;
+            }
+
+            // Function to create AI message element with professional markdown rendering
+            function createAIMessage(text, isTyping = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex justify-start animate-fadeIn';
+
+                // For typing animation, show plain text first
+                const displayText = isTyping ? text : processMarkdown(text);
+
+                messageDiv.innerHTML = `
+                    <div class="max-w-[85%] md:max-w-[75%]">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-md">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-white rounded-2xl rounded-tl-sm px-5 py-4 shadow-md border border-gray-100">
+                                    <div class="ai-response text-sm sm:text-base">
+                                        ${displayText}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1.5 px-2">
+                                    <div class="flex items-center gap-1">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                        <span class="text-xs text-gray-500 font-medium">AI Assistant</span>
+                                    </div>
+                                    <span class="text-xs text-gray-300">•</span>
+                                    <span class="text-xs text-gray-400">${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return messageDiv;
+            }
+
+            // Function to create typing indicator
+            function createTypingIndicator() {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex justify-start animate-fadeIn';
+                messageDiv.id = 'typingIndicator';
+                messageDiv.innerHTML = `
+                    <div class="max-w-[85%] md:max-w-[75%]">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-md">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-white rounded-2xl rounded-tl-sm px-5 py-4 shadow-md border border-gray-100">
+                                    <div class="typing-indicator flex gap-1">
+                                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return messageDiv;
+            }
+
+            // Global function to copy code
+            window.copyCode = function(button) {
+                const codeBlock = button.previousElementSibling.querySelector('code');
+                const code = codeBlock.textContent;
+
+                navigator.clipboard.writeText(code).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            }
+
+            // Function to send message
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Remove empty state if exists
+                const emptyState = messagesContainer.querySelector('.text-center.text-gray-400');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+
+                // Display user message
+                messagesContainer.appendChild(createUserMessage(message));
+                chatInput.value = '';
+
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                // Show typing indicator
+                const typingIndicator = createTypingIndicator();
+                messagesContainer.appendChild(typingIndicator);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                try {
+                    // Send to backend
+                    const response = await fetch('{% url "chatbot_message" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: sessionId
+                        })
+                    });
+
+                    // Remove typing indicator
+                    const indicator = document.getElementById('typingIndicator');
+                    if (indicator) indicator.remove();
+
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        messagesContainer.appendChild(createAIMessage('❌ Error: ' + data.error));
+                    } else if (data.success && data.response) {
+                        // Store session ID
+                        sessionId = data.session_id;
+                        localStorage.setItem('chatSessionId', sessionId);
+
+                        // Display AI response with proper markdown rendering
+                        const aiMessageDiv = createAIMessage(data.response);
+                        messagesContainer.appendChild(aiMessageDiv);
+
+                        // Highlight code blocks if present
+                        if (typeof hljs !== 'undefined') {
+                            aiMessageDiv.querySelectorAll('pre code').forEach((block) => {
+                                hljs.highlightElement(block);
+                            });
+                        }
+                    } else {
+                        const errorMsg = data.message || data.error || 'Unknown error';
+                        messagesContainer.appendChild(createAIMessage('❌ Error: ' + errorMsg));
+                    }
+                } catch (error) {
+                    const indicator = document.getElementById('typingIndicator');
+                    if (indicator) indicator.remove();
+                    console.error('Chatbot error:', error);
+                    messagesContainer.appendChild(createAIMessage('❌ Sorry, I encountered an error: ' + error.message));
+                }
+
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // New Chat button
+            newChatButton.addEventListener('click', function() {
+                // Clear messages
+                messagesContainer.innerHTML = '';
+                // Clear session ID
+                localStorage.removeItem('chatSessionId');
+                sessionId = null;
+            });
+        });
+    </script>
+</body>
+
+</html>

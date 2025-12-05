@@ -1,0 +1,517 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Your Books & More</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                        'sans': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Toast notification animations */
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        .toast-enter {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .toast-exit {
+            animation: slideOutRight 0.3s ease-out;
+        }
+
+        /* Modal animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: slideUp 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="font-sans bg-zinc-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <nav class="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Left Side - Logo -->
+                    <div class="flex items-center">
+                        <a href="{% url 'buyer_dashboard' %}" class="text-teal-900 text-xl font-bold">book.com</a>
+                    </div>
+
+                    <!-- Center - Search -->
+                    <div class="hidden md:flex flex-1 max-w-md mx-8">
+                        <div class="relative w-full">
+                            <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Search books, courses, webinars...">
+                            <button class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Side - Actions -->
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'cart' %}" class="relative p-2 text-gray-600 hover:text-teal-900">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"></path>
+                            </svg>
+                            {% if total_items > 0 %}
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{{ total_items }}</span>
+                            {% endif %}
+                        </a>
+
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-700">{{ full_name }}</span>
+                            <a href="{% url 'logout' %}" class="text-sm text-teal-900 hover:text-teal-700">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+                <p class="text-gray-600">{{ total_items }} item{{ total_items|pluralize }} in your cart</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-24 w-full">
+                <!-- Cart Items -->
+                <div class="w-full lg:max-w-3xl flex flex-col">
+                    <div class="hidden md:flex justify-between items-center mb-3 p-2 sticky top-0 bg-zinc-50 z-10">
+                        <span class="text-gray-700 text-sm font-medium">Product</span>
+                        <span class="text-gray-700 text-sm font-medium">Price</span>
+                    </div>
+
+                    <div class="space-y-2 max-h-[380px] overflow-y-auto pr-2 -mr-2">
+                        {% for item in cart_items %}
+                        <div class="flex items-center bg-white md:bg-zinc-100 rounded-lg p-2 shadow-sm">
+                            {% if item.content_object.book_image or item.content_object.course_image or item.content_object.webinar_image %}
+                                {% if item.content_object.book_image %}
+                                    <img class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md mr-2 sm:mr-3" src="{{ item.content_object.book_image.url }}" alt="{{ item.content_object.title }}">
+                                {% elif item.content_object.course_image %}
+                                    <img class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md mr-2 sm:mr-3" src="{{ item.content_object.course_image.url }}" alt="{{ item.content_object.title }}">
+                                {% elif item.content_object.webinar_image %}
+                                    <img class="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md mr-2 sm:mr-3" src="{{ item.content_object.webinar_image.url }}" alt="{{ item.content_object.title }}">
+                                {% endif %}
+                            {% else %}
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-md mr-2 sm:mr-3 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-sm font-medium text-gray-800 truncate">{{ item.content_object.title }}</h3>
+                                <p class="text-xs text-gray-600">By: <span class="font-medium">{{ item.content_object.seller.full_name }}</span></p>
+                                {% if item.quantity > 1 %}
+                                    <p class="text-xs text-gray-500">Quantity: {{ item.quantity }}</p>
+                                {% endif %}
+                                <div class="md:hidden mt-1">
+                                    <span class="text-sm font-medium text-gray-800">${{ item.get_total_price }}</span>
+                                </div>
+                            </div>
+                            <div class="hidden md:flex items-center space-x-3 ml-2">
+                                <span class="text-sm font-medium text-gray-800">${{ item.get_total_price }}</span>
+                                <button onclick="removeFromCart({{ item.id }})" class="text-gray-400 hover:text-red-600 p-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <button onclick="removeFromCart({{ item.id }})" class="md:hidden text-gray-400 hover:text-red-600 p-1 ml-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+                            <p class="text-gray-500 mb-4">Add some items to your cart to get started.</p>
+                            <a href="{% url 'buyer_dashboard' %}" class="inline-flex items-center px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm rounded-md transition-colors">
+                                Continue Shopping
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if cart_items %}
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 sticky bottom-0 bg-zinc-50">
+                        <a href="{% url 'buyer_dashboard' %}" class="flex-1 px-3 sm:px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm rounded-md transition-colors text-center">
+                            Continue Shopping
+                        </a>
+                        <button onclick="clearCart()" class="flex-1 px-3 sm:px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm rounded-md transition-colors">
+                            Clear Cart
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Order Summary -->
+                {% if cart_items %}
+                <div class="mt-6 lg:mt-12 w-full lg:w-80">
+                    <div class="bg-[#FFFCF5] rounded-lg shadow-sm p-4 sm:p-6 sticky top-4">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm sm:text-base">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span class="font-medium">${{ total_price }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm sm:text-base">
+                                <span class="text-gray-600">Shipping</span>
+                                <span class="font-medium">Free</span>
+                            </div>
+                            <div class="flex justify-between text-sm sm:text-base">
+                                <span class="text-gray-600">Tax</span>
+                                <span class="font-medium">$0.00</span>
+                            </div>
+                            <div class="border-t border-gray-300 pt-3">
+                                <div class="flex justify-between text-base sm:text-lg font-bold">
+                                    <span>Total</span>
+                                    <span>${{ total_price }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full mt-6 bg-teal-900 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-md transition-colors">
+                            Checkout
+                        </button>
+
+                        <div class="mt-4 text-center">
+                            <p class="text-xs text-gray-500">Secure checkout powered by book.com</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-zinc-50 py-4 mt-12">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+                    <div class="flex space-x-6 mt-4 md:mt-0">
+                        <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                        <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 modal-content">
+            <div class="flex items-start mb-4">
+                <div id="modalIcon" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4">
+                    <!-- Icon will be inserted here -->
+                </div>
+                <div class="flex-1">
+                    <h3 id="modalTitle" class="text-lg font-bold text-gray-900 mb-2"></h3>
+                    <p id="modalMessage" class="text-sm text-gray-600"></p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button id="modalCancel" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                    Cancel
+                </button>
+                <button id="modalConfirm" class="flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        {% csrf_token %}
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+
+            // Define styles and icons for different toast types
+            const styles = {
+                success: {
+                    bg: 'bg-gradient-to-r from-green-500 to-emerald-600',
+                    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>`
+                },
+                error: {
+                    bg: 'bg-gradient-to-r from-red-500 to-rose-600',
+                    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>`
+                },
+                info: {
+                    bg: 'bg-gradient-to-r from-blue-500 to-cyan-600',
+                    icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>`
+                }
+            };
+
+            const style = styles[type] || styles.info;
+
+            toast.className = `fixed top-4 right-4 ${style.bg} text-white px-5 py-3.5 rounded-xl shadow-2xl z-50 toast-enter flex items-center space-x-3 max-w-sm`;
+            toast.innerHTML = `
+                <div class="flex-shrink-0">
+                    ${style.icon}
+                </div>
+                <p class="text-sm font-medium flex-1">${message}</p>
+                <button onclick="this.parentElement.remove()" class="flex-shrink-0 hover:bg-white/20 rounded-full p-1 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Convenience functions
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+
+        function showError(message) {
+            showToast(message, 'error');
+        }
+
+        function showInfo(message) {
+            showToast(message, 'info');
+        }
+
+        // Show confirmation modal
+        function showConfirmModal(title, message, onConfirm, type = 'warning') {
+            const modal = document.getElementById('confirmModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalIcon = document.getElementById('modalIcon');
+            const modalConfirm = document.getElementById('modalConfirm');
+            const modalCancel = document.getElementById('modalCancel');
+
+            // Set content
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Set icon and colors based on type
+            if (type === 'warning') {
+                modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-orange-100';
+                modalIcon.innerHTML = `<svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>`;
+                modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-orange-500 hover:bg-orange-600';
+            } else if (type === 'danger') {
+                modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-red-100';
+                modalIcon.innerHTML = `<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>`;
+                modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-red-500 hover:bg-red-600';
+            } else {
+                modalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4 bg-teal-100';
+                modalIcon.innerHTML = `<svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>`;
+                modalConfirm.className = 'flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors bg-teal-600 hover:bg-teal-700';
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+
+            // Handle confirm
+            modalConfirm.onclick = () => {
+                modal.classList.add('hidden');
+                if (onConfirm) onConfirm();
+            };
+
+            // Handle cancel
+            modalCancel.onclick = () => {
+                modal.classList.add('hidden');
+            };
+
+            // Close on background click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            };
+
+            // Close on escape key
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    modal.classList.add('hidden');
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+
+        // Remove from cart functionality
+        function removeFromCart(itemId) {
+            showConfirmModal(
+                'Remove Item?',
+                'Are you sure you want to remove this item from your cart?',
+                () => {
+                    // Get CSRF token from cookie
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    fetch(`/remove-from-cart/${itemId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccess('Item removed from cart');
+                            // Reload page to reflect changes after toast
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showError(data.message || 'Failed to remove item from cart');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('Failed to remove item from cart');
+                    });
+                },
+                'danger'
+            );
+        }
+
+        // Clear entire cart functionality
+        function clearCart() {
+            showConfirmModal(
+                'Clear Cart?',
+                'Are you sure you want to clear your entire cart? This action cannot be undone.',
+                () => {
+                    // Get CSRF token from cookie
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    // Call the clear cart endpoint
+                    fetch('/clear-cart/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccess(data.message);
+                            // Reload the page to show empty cart after toast
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            showError(data.message || 'Failed to clear cart');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('Failed to clear cart');
+                    });
+                },
+                'danger'
+            );
+        }
+    </script>
+</body>
+</html>

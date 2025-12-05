@@ -1,0 +1,33 @@
+/* Custom Global Styles for Better UX */
+
+/* Add cursor pointer to all buttons and clickable elements */
+button:not([disabled]) {
+    cursor: pointer;
+}
+
+button[disabled] {
+    cursor: not-allowed;
+}
+
+/* Ensure links styled as buttons also get pointer cursor */
+a[role="button"],
+a.button,
+[onclick]:not(button):not(a) {
+    cursor: pointer;
+}
+
+/* Label elements acting as file upload triggers */
+label[for] {
+    cursor: pointer;
+}
+
+/* Select dropdowns */
+select {
+    cursor: pointer;
+}
+
+/* Checkbox and radio inputs */
+input[type="checkbox"],
+input[type="radio"] {
+    cursor: pointer;
+}

@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% comment %} <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> {% endcomment %}
+    <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+    <title>Login Page</title>
+</head>
+<body class="font-urbanist min-h-screen bg-[#F9F5ED] p-4 sm:p-6 overflow-hidden">
+    <div class="container mx-auto flex flex-col lg:flex-row min-h-[calc(100vh-2rem)]">
+        <div class="hidden lg:flex lg:w-1/2 items-center justify-center p-8">
+            <div class="w-full h-[580px] rounded-xl overflow-hidden">
+                <img class="w-full h-full object-cover object-center" src="{% static 'assets/laptop.png' %}" alt="Laptop">
+            </div>
+        </div>
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8">
+            <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-xl shadow-sm">
+
+                <h1 class="text-2xl sm:text-3xl font-bold text-center text-neutral-700 font-['Urbanist'] mb-6">
+                    Login Your Account
+                </h1>
+                <!-- Social login buttons - hidden but space preserved with welcome text -->
+                <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center mb-6 relative">
+                    <!-- Welcome text visible in the space -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <h2 class="text-xl sm:text-2xl font-semibold text-teal-900 font-['Urbanist']">Welcome to the VORTEX AI</h2>
+                    </div>
+                    <!-- Hidden buttons to preserve space -->
+                    <div style="visibility: hidden;">
+                        <button type="button" disabled
+                            class="w-full sm:w-64 px-5 py-3 text-sm rounded-md outline outline-1 outline-offset-[-0.50px] outline-stone-300 inline-flex items-center justify-center gap-2.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 disabled:hover:bg-gray-100 hover:bg-gray-200 hover:shadow-sm transition-all duration-200">
+                            <img class="w-4 h-4 object-contain" src="{% static 'assets/Group 1480.svg' %}" alt="Google logo"
+                                onerror="this.style.display='none'">
+                            <span class="font-medium font-['Poppins']">Login with Google</span>
+                        </button>
+                    </div>
+                    <div style="visibility: hidden;">
+                        <button type="button" disabled
+                            class="w-full sm:w-64 px-5 py-3 text-sm rounded-md outline outline-1 outline-offset-[-0.50px] outline-stone-300 inline-flex items-center justify-center gap-2.5 bg-gray-100 text-gray-400 cursor-not-allowed opacity-50 disabled:hover:bg-gray-100 hover:bg-gray-200 hover:shadow-sm transition-all duration-200">
+                            <img class="w-8 h-8 object-contain" src="{% static 'assets/fb.png' %}" alt="Facebook logo"
+                                onerror="this.style.display='none'">
+                            <span class="font-medium font-['Poppins']">Login with Facebook</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center my-6" style="visibility: hidden;">
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                    <span class="px-4 text-neutral-700 text-sm font-normal font-['Urbanist']">Or Continue With Email</span>
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                </div>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-neutral-700 text-sm font-medium font-['Urbanist'] mb-1">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-neutral-700 text-sm font-medium font-['Urbanist'] mb-1">Password</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-red-500 text-xs mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center accent-teal-900 focus:outline-none focus:border-gray-300">
+                            <input type="checkbox" id="rememberMe" name="remember_me"
+                                class="w-4 h-4 rounded cursor-pointer" {% if form.remember_me.value %}checked{% endif %}>
+                            <label for="rememberMe"
+                                class="ml-2 text-neutral-700 text-sm font-normal font-['Urbanist'] cursor-pointer select-none">
+                                Remember Me
+                            </label>
+                        </div>
+                    </div>  
+                    <button type="submit"
+                        class="w-full py-3 bg-teal-900 hover:bg-teal-800 text-white font-medium rounded-lg transition-colors duration-200">
+                        Login
+                    </button>
+                </form>
+                    <div class="text-center">
+                        <a href="{% url 'forgot_password' %}" class="text-neutral-700 text-base font-medium font-['Urbanist'] hover:text-teal-800 transition-colors underline">
+                            Forgot Your Password?
+                        </a>
+                    </div>                    
+                    <div class="text-center pt-2">
+                        <span class="text-neutral-700 text-base font-medium font-['Urbanist']">
+                            Don't Have An Account? 
+                        </span>
+                        <a href="{% url 'register' %}" class="text-teal-900 font-medium hover:underline">
+                            Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+
+</html>

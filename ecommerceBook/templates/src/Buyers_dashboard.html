@@ -1,0 +1,1080 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                        'sans': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+    <title>Buyers Dashboard</title>
+</head>
+
+<body class="font-urbanist bg-zinc-50">
+    <!-- Mobile Menu Button -->
+    <button id="menuToggle" class="md:hidden fixed top-3 right-4 z-50 p-2 bg-white rounded-md shadow-md hover:bg-gray-100 hover:shadow-lg transition-all duration-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Dynamic Sidebar -->
+        {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='products' %}
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-54 lg:ml-64">
+            <!-- Top Navigation -->
+            <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                    <div class="flex justify-between items-center">
+                        <!-- Left Section: Welcome Message -->
+                        <div class="flex items-center space-x-3">
+                            <div>
+                                <h1 class="text-lg md:text-xl font-bold text-gray-800">Hey there, <span class="text-teal-600">{{ user.full_name|default:"Buyer" }}</span></h1>
+                                <p class="text-xs text-gray-500 hidden sm:block">Discover amazing books, courses & more</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Section: Search, Cart, Notifications, Profile -->
+                        <div class="flex items-center space-x-2 md:space-x-4">
+                            <!-- Search Bar -->
+                            <div class="relative hidden md:block">
+                                <form method="GET" action="{% url 'buyer_dashboard' %}">
+                                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search products..."
+                                        class="w-48 lg:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all">
+                                    <button type="submit" class="absolute left-3 top-2.5 text-gray-400 hover:text-teal-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Enhanced Cart Button -->
+                            <a href="{% url 'cart' %}" class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group">
+                                <svg class="w-6 h-6 text-gray-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                    </path>
+                                </svg>
+                                <!-- Beautiful Count Badge -->
+                                {% if cart_count > 0 %}
+                                <div id="cart-count-text" class="absolute top-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                                    {{ cart_count }}
+                                </div>
+                                {% else %}
+                                <div id="cart-count-text" class="absolute top-0 right-0 bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center shadow-lg border-2 border-white" style="display: none;">
+                                    0
+                                </div>
+                                {% endif %}
+                            </a>
+
+                            <!-- Notification Bell with Dropdown -->
+                            <div class="relative">
+                                <button id="notificationButton" class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group">
+                                    <svg class="w-5 h-5 text-gray-600 group-hover:text-teal-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                        </path>
+                                    </svg>
+                                    <!-- Notification Badge -->
+                                    <span id="notificationBadge" class="absolute top-0 right-0 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center shadow-lg border-2 border-white" style="display: none;">0</span>
+                                </button>
+
+                                <!-- Notification Dropdown -->
+                                <div id="notificationDropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 hidden">
+                                    <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-lg font-bold text-gray-800">Notifications</h3>
+                                            <button id="markAllRead" class="text-xs text-teal-600 hover:text-teal-700 font-semibold">Mark all read</button>
+                                        </div>
+                                    </div>
+                                    <div id="notificationList" class="max-h-96 overflow-y-auto">
+                                        <!-- Notifications will be loaded here via JavaScript -->
+                                        <div class="p-8 text-center text-gray-400">
+                                            <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                            </svg>
+                                            <p class="text-sm">No notifications yet</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Profile Section -->
+                            <a href="{% url 'settings' %}" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors group">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="User"
+                                        class="w-9 h-9 rounded-full bg-gray-200 ring-2 ring-gray-200 group-hover:ring-teal-500 transition-all object-cover">
+                                {% else %}
+                                    <img src="{% static 'assets/Buyer_Dashboard_images/Place image.png' %}" alt="User"
+                                        class="w-9 h-9 rounded-full bg-gray-200 ring-2 ring-gray-200 group-hover:ring-teal-500 transition-all">
+                                {% endif %}
+                                <div class="hidden lg:block">
+                                    <p class="text-sm font-semibold text-gray-700 group-hover:text-teal-600 transition-colors">{{ user.full_name }}</p>
+                                    <p class="text-xs text-gray-500">Buyer Account</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                <!-- Category Filter -->
+                <div class="mb-6 relative">
+                    <div class="flex justify-between items-center gap-4">
+                        <div class="flex-1">
+                            <button type="button" id="categoryDropdown"
+                                class="inline-flex justify-between items-center w-36 px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-zinc-50 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                aria-expanded="true" aria-haspopup="true">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                    <span>Category</span>
+                                </div>
+                                <svg class="-mr-1 ml-2 h-4 w-4 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown menu -->
+                    <div id="dropdownMenu"
+                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 "
+                        role="menu" aria-orientation="vertical" aria-labelledby="categoryDropdown">
+                        <div class="py-1" role="none">
+                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                role="menuitem">All Categories</a>
+                            {% for category in categories %}
+                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                                role="menuitem">{{ category.name }}</a>
+                            {% empty %}
+                            <span class="text-gray-500 block px-4 py-2 text-sm italic">No categories available</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services Section (Displayed First) -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Services ({{ services|length }})</h2>
+                        <a href="{% url 'all_products' 'service' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                    {% for service in services %}
+                    <!-- Service Card -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <a href="{% url 'product_detail' 'service' service.id %}" class="block w-full h-48 overflow-hidden">
+                            {% if service.service_image %}
+                                <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </a>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ service.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ service.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% if service.avg_rating > 0 %}
+                                        <span class="text-sm text-gray-500 mr-1">{{ service.avg_rating }}</span>
+                                        <div class="flex">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= service.avg_rating|floatformat:0|add:"0" %}
+                                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-xs text-gray-400 ml-1">({{ service.total_ratings }})</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if service.id in purchased_service_ids %}
+                                    <!-- Chat button for purchased services -->
+                                    <a href="{% url 'service_chat' service.id %}"
+                                        class="flex-1 py-2 text-sm bg-teal-900 text-white rounded hover:bg-teal-800 transition-colors text-center font-medium">
+                                        Chat with Seller
+                                    </a>
+                                {% else %}
+                                    <!-- View Detail and Add to Cart for unpurchased services -->
+                                    <a href="{% url 'product_detail' 'service' service.id %}"
+                                        class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        View Detail
+                                    </a>
+                                    <button onclick="addToCart('service', {{ service.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="service" data-product-id="{{ service.id }}">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <!-- Empty state for services -->
+                    <div class="col-span-full text-center py-12">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No services available yet</h3>
+                        <p class="text-gray-500 mb-4">Check back soon for professional services!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Books Section (Ordered by Personalized Recommendations) -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Books ({{ books|length }})</h2>
+                        <a href="{% url 'all_products' 'book' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for book in books %}
+                    <!-- Product Card 1 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <a href="{% url 'product_detail' 'book' book.id %}" class="block w-full h-48 overflow-hidden">
+                            {% if book.book_image %}
+                                    <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                        </a>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ book.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ book.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% if book.avg_rating > 0 %}
+                                        <span class="text-sm text-gray-500 mr-1">{{ book.avg_rating }}</span>
+                                        <div class="flex">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= book.avg_rating|floatformat:0|add:"0" %}
+                                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-xs text-gray-400 ml-1">({{ book.total_ratings }})</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'product_detail' 'book' book.id %}"
+                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    View Detail
+                                </a>
+                                <button onclick="addToCart('book', {{ book.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="book" data-product-id="{{ book.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No books available</h3>
+                            <p class="text-gray-500 mb-4">Check back later for new books from our sellers.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Courses Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Courses ({{ courses|length }})</h2>
+                        <a href="{% url 'all_products' 'course' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for course in courses %}
+                    <!-- Product Card 1 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <a href="{% url 'product_detail' 'course' course.id %}" class="block w-full h-48 overflow-hidden">
+                            {% if course.course_image %}
+                                    <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                        </a>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ course.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% if course.avg_rating > 0 %}
+                                        <span class="text-sm text-gray-500 mr-1">{{ course.avg_rating }}</span>
+                                        <div class="flex">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= course.avg_rating|floatformat:0|add:"0" %}
+                                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-xs text-gray-400 ml-1">({{ course.total_ratings }})</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'product_detail' 'course' course.id %}"
+                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    View Detail
+                                </a>
+                                <button onclick="addToCart('course', {{ course.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="course" data-product-id="{{ course.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Courses available</h3>
+                            <p class="text-gray-500 mb-4">Check back later for new courses from our sellers.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Webinars Section -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mt-12">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-teal-900 text-2xl font-bold font-['Urbanist'] leading-loose">Webinars ({{ webinars|length }})</h2>
+                        <a href="{% url 'all_products' 'webinar' %}" class="text-neutral-700 text-base font-normal font-['Poppins'] underline hover:text-teal-700 focus:outline-none">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {% for webinar in webinars %}
+                    <!-- Product Card 1 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <a href="{% url 'product_detail' 'webinar' webinar.id %}" class="block w-full h-48 overflow-hidden">
+                            {% if webinar.webinar_image %}
+                                                    <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
+                                                {% else %}
+                                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                    </div>
+                                                {% endif %}
+                        </a>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ webinar.title }}</h3>
+                            <div class="h-px bg-gray-200 my-2"></div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center text-sm">
+                                    <span class="text-gray-500 mr-1">By:</span>
+                                    <span class="font-medium">{{ webinar.seller.full_name }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    {% if webinar.avg_rating > 0 %}
+                                        <span class="text-sm text-gray-500 mr-1">{{ webinar.avg_rating }}</span>
+                                        <div class="flex">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= webinar.avg_rating|floatformat:0|add:"0" %}
+                                                    <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                                                    </svg>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-xs text-gray-400 ml-1">({{ webinar.total_ratings }})</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'product_detail' 'webinar' webinar.id %}"
+                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    View Detail
+                                </a>
+                                <button onclick="addToCart('webinar', {{ webinar.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="webinar" data-product-id="{{ webinar.id }}">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M3 3h2l.4 2m13.6 0l-1.5 7.5M7 13h10l1-5H5.5m-.5 8a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                        <div class="col-span-full text-center py-12">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No Webinar available</h3>
+                            <p class="text-gray-500 mb-4">Check back later for new Webinar from our sellers.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-zinc-50 py-4">
+                <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-sm text-gray-500">Copyright 2025 book.com</div>
+                        <div class="flex space-x-6 mt-4 md:mt-0">
+                            <a href="{% url 'privacy_policy' %}" class="text-gray-400 hover:text-gray-500">Privacy Policy</a>
+                            <a href="{% url 'contact_us' %}" class="text-gray-400 hover:text-gray-500">Contact</a>
+                        </div>
+                        <div class="flex space-x-4 mt-4 md:mt-0">
+                            <!-- Social Icons -->
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-gray-500">
+                                <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Toggle dropdown on button click
+        const dropdownButton = document.getElementById('categoryDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        dropdownButton.addEventListener('click', function () {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+            dropdownMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownButton.setAttribute('aria-expanded', 'false');
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Close dropdown when clicking on a menu item
+        const menuItems = dropdownMenu.querySelectorAll('a');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                dropdownButton.setAttribute('aria-expanded', 'false');
+                dropdownMenu.classList.add('hidden');
+                // Update button text to show selected category
+                const buttonText = this.textContent;
+                const buttonSpan = dropdownButton.querySelector('span');
+                if (buttonText !== 'All Categories') {
+                    buttonSpan.textContent = buttonText;
+                } else {
+                    buttonSpan.textContent = 'Category';
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // Mobile menu toggle
+        (function () {
+            const toggleBtn = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (!toggleBtn || !sidebar) return;
+
+            function openSidebar() {
+                sidebar.classList.remove('-translate-x-full');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+            }
+
+            function isMobile() {
+                return window.innerWidth < 768; // md breakpoint
+            }
+
+            toggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+            });
+
+            // Close when clicking outside on mobile
+            document.addEventListener('click', function (e) {
+                if (!isMobile()) return;
+                if (!sidebar.contains(e.target) && e.target !== toggleBtn) {
+                    closeSidebar();
+                }
+            });
+
+            // Ensure correct state on resize
+            window.addEventListener('resize', function () {
+                if (!isMobile()) {
+                    // Keep sidebar visible on md+
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    // Hide by default on mobile
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        })();
+    </script>
+
+    <script>
+        // Add to cart functionality
+        function addToCart(productType, productId) {
+            // Get CSRF token from cookie
+            const csrfToken = getCookie('csrftoken');
+
+            // Make AJAX request
+            fetch(`/add-to-cart/${productType}/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showNotification(data.message, 'success');
+                    // Update cart count in header if element exists
+                    updateCartCount(data.cart_count);
+                } else {
+                    // Show error message
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to add item to cart', 'error');
+            });
+        }
+
+        // Show notification function
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-md z-50 ${
+                type === 'success'
+                    ? 'bg-green-100 border border-green-400 text-green-700'
+                    : 'bg-red-100 border border-red-400 text-red-700'
+            }`;
+            notification.textContent = message;
+
+            // Add to DOM
+            document.body.appendChild(notification);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Update cart count in header
+        function updateCartCount(count) {
+            // Update the cart count badge
+            const cartCountText = document.getElementById('cart-count-text');
+
+            if (cartCountText) {
+                cartCountText.textContent = count;
+
+                if (count > 0) {
+                    // Show badge with red-orange gradient and pulse animation
+                    cartCountText.style.display = 'flex';
+                    cartCountText.className = 'absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center shadow-lg border-2 border-white animate-pulse';
+                } else {
+                    // Hide badge when count is 0
+                    cartCountText.style.display = 'none';
+                }
+            }
+
+            // Update legacy cart count element if it exists
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+                cartCountElement.style.display = count > 0 ? 'block' : 'none';
+            }
+        }
+    </script>
+
+    <!-- Notification System JavaScript -->
+    <script>
+        (function() {
+            const notificationButton = document.getElementById('notificationButton');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const notificationBadge = document.getElementById('notificationBadge');
+            const notificationList = document.getElementById('notificationList');
+            const markAllReadBtn = document.getElementById('markAllRead');
+            let isDropdownOpen = false;
+
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Fetch notifications from API
+            async function fetchNotifications() {
+                try {
+                    const response = await fetch('{% url "get_notifications" %}');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateNotificationBadge(data.unread_count);
+                        updateNotificationList(data.notifications);
+                    }
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                }
+            }
+
+            // Update notification badge
+            function updateNotificationBadge(count) {
+                if (count > 0) {
+                    notificationBadge.textContent = count > 99 ? '99+' : count;
+                    notificationBadge.style.display = 'flex';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            }
+
+            // Update notification list
+            function updateNotificationList(notifications) {
+                // Filter to show only unread notifications
+                const unreadNotifications = notifications.filter(notif => !notif.is_read);
+
+                if (unreadNotifications.length === 0) {
+                    notificationList.innerHTML = `
+                        <div class="p-8 text-center text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <p class="text-sm">No new notifications</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                unreadNotifications.forEach(notif => {
+                    const linkAttr = notif.link ? `onclick="handleNotificationClick(${notif.id}, '${notif.link}')"` : '';
+
+                    html += `
+                        <div class="bg-blue-50 p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors" ${linkAttr}>
+                            <div class="flex items-start">
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800">${notif.title}</p>
+                                    <p class="text-xs text-gray-600 mt-1">${notif.message}</p>
+                                    <p class="text-xs text-gray-400 mt-2">${notif.time_ago}</p>
+                                </div>
+                                <div class="ml-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                notificationList.innerHTML = html;
+            }
+
+            // Handle notification click
+            window.handleNotificationClick = function(notificationId, link) {
+                // Mark as read
+                fetch(`/api/notifications/${notificationId}/mark-read/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+
+                // Navigate to link if exists
+                if (link) {
+                    window.location.href = link;
+                }
+            };
+
+            // Toggle dropdown
+            notificationButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                isDropdownOpen = !isDropdownOpen;
+
+                if (isDropdownOpen) {
+                    notificationDropdown.classList.remove('hidden');
+                    fetchNotifications(); // Refresh notifications when opening
+                } else {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+
+            // Mark all as read
+            markAllReadBtn.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('{% url "mark_notifications_read" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationBadge(0);
+                        fetchNotifications(); // Refresh list
+                    }
+                } catch (error) {
+                    console.error('Error marking notifications as read:', error);
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationButton.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    isDropdownOpen = false;
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+
+            // Initial fetch
+            fetchNotifications();
+
+            // Poll for new notifications every 15 seconds
+            setInterval(fetchNotifications, 15000);
+        })();
+    </script>
+    <!-- Chatbot Floating Icon -->
+    <button id="chatbotToggle" class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-teal-900 text-white shadow-lg hover:scale-105 transition-transform flex items-center justify-center" aria-label="Open Chatbot">
+        <i class="fa-solid fa-robot text-2xl" aria-hidden="true"></i>
+    </button>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbotWidget" class="hidden fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white rounded-lg shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="bg-teal-900 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-robot text-xl"></i>
+                <h3 class="font-semibold text-lg">AI Support</h3>
+            </div>
+            <button id="closeChatbot" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <!-- Welcome Message -->
+            <div class="flex items-start space-x-2">
+                <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                    <p class="text-sm text-gray-800">Hello! How can I help you today?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="border-t border-gray-200 p-4 bg-white rounded-b-lg">
+            <form id="chatForm" class="flex space-x-2">
+                <input
+                    type="text"
+                    id="chatInput"
+                    placeholder="Type your message..."
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                    required
+                >
+                <button
+                    type="submit"
+                    class="px-4 py-2 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Chatbot widget functionality
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotWidget = document.getElementById('chatbotWidget');
+        const closeChatbot = document.getElementById('closeChatbot');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Toggle chatbot
+        chatbotToggle.addEventListener('click', () => {
+            chatbotWidget.classList.toggle('hidden');
+            if (!chatbotWidget.classList.contains('hidden')) {
+                chatInput.focus();
+            }
+        });
+
+        // Close chatbot
+        closeChatbot.addEventListener('click', () => {
+            chatbotWidget.classList.add('hidden');
+        });
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            chatInput.value = '';
+
+            // Create AI message container
+            const aiMessageDiv = createAIMessageContainer();
+            const aiTextElement = aiMessageDiv.querySelector('.ai-text');
+
+            // Show typing indicator
+            aiTextElement.innerHTML = '<div class="flex space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>';
+
+            try {
+                const csrftoken = getCookie('csrftoken');
+                const response = await fetch('{% url "chatbot_message" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.response) {
+                    // Simulate typing effect
+                    aiTextElement.textContent = '';
+                    let index = 0;
+                    const text = data.response;
+                    const typeSpeed = 20; // milliseconds per character
+
+                    function typeChar() {
+                        if (index < text.length) {
+                            aiTextElement.textContent += text.charAt(index);
+                            index++;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            setTimeout(typeChar, typeSpeed);
+                        }
+                    }
+                    typeChar();
+                } else {
+                    const errorMsg = data.message || data.error || 'An error occurred';
+                    console.error('Backend error:', errorMsg);
+                    aiTextElement.textContent = `Error: ${errorMsg}`;
+                }
+            } catch (error) {
+                console.error('Chatbot error:', error);
+                aiTextElement.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-2';
+
+            if (sender === 'user') {
+                messageDiv.classList.add('flex-row-reverse', 'space-x-reverse');
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-user text-white text-sm"></i>
+                    </div>
+                    <div class="bg-teal-900 text-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                        <p class="text-sm text-gray-800">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function createAIMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-2';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-teal-900 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                    <p class="text-sm text-gray-800 ai-text"></p>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

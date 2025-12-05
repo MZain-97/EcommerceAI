@@ -1,0 +1,112 @@
+<!-- Stripe Account Setup Modal -->
+<div id="stripeAccountModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: {% if show_stripe_modal %}block{% else %}none{% endif %};">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Setup Payment Account</h3>
+                <svg class="w-8 h-8 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-gray-700 mb-2">
+                    <strong>Congratulations!</strong> Your seller account is now active.
+                </p>
+                <p class="text-sm text-gray-600">
+                    To receive payments from buyers, please connect your Stripe account. You'll need your <strong>Stripe Account ID</strong>.
+                </p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="mb-4">
+                <p class="text-xs text-gray-600 mb-2">
+                    <strong>How to get your Stripe Account ID:</strong>
+                </p>
+                <ol class="text-xs text-gray-600 list-decimal list-inside space-y-1">
+                    <li>Go to <a href="https://dashboard.stripe.com" target="_blank" class="text-blue-600 hover:underline">dashboard.stripe.com</a></li>
+                    <li>Sign in or create a Stripe account</li>
+                    <li>Find your Account ID (starts with "acct_")</li>
+                    <li>Copy and paste it below</li>
+                </ol>
+            </div>
+
+            <!-- Form -->
+            <form id="stripeAccountForm" method="POST" action="{% url 'update_stripe_account' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="stripe_account_id" class="block text-sm font-medium text-gray-700 mb-1">
+                        Stripe Account ID <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="stripe_account_id"
+                        id="stripe_account_id"
+                        placeholder="acct_xxxxxxxxxxxxx"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        pattern="acct_[A-Za-z0-9]+"
+                        title="Must start with 'acct_' followed by alphanumeric characters"
+                    />
+                    <p class="mt-1 text-xs text-gray-500">Example: acct_1234567890abcdef</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex space-x-3">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-teal-900 hover:bg-teal-800 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                        Connect Account
+                    </button>
+                    <button
+                        type="button"
+                        onclick="skipStripeSetup()"
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                        Skip for Now
+                    </button>
+                </div>
+            </form>
+
+            <!-- Warning -->
+            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p class="text-xs text-yellow-800">
+                    ⚠️ <strong>Important:</strong> You cannot add products until you connect your Stripe account.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function skipStripeSetup() {
+    // Close modal
+    document.getElementById('stripeAccountModal').style.display = 'none';
+
+    // Show toast message
+    showToast('You can add your Stripe Account ID later in Settings', 'warning');
+
+    // Redirect to seller dashboard
+    window.location.href = '{% url "seller_dashboard" %}';
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 max-w-md px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' :
+        type === 'warning' ? 'bg-yellow-500' :
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Remove after 5 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+</script>
