@@ -301,35 +301,155 @@ class PasswordResetToken(models.Model):
 # ==============================================================================
 
 class Category(models.Model):
-    """Product categories for organizing books, courses, and webinars"""
-    name = models.CharField(max_length=100, unique=True, db_index=True)
+    """
+    Hierarchical category system with two levels: Main categories (admin-only) and Sub-categories (seller-created).
+    Main categories have no parent. Sub-categories must have a parent.
+    """
+    name = models.CharField(max_length=100, db_index=True, help_text="Category name")
+    slug = models.SlugField(max_length=120, unique=True, blank=True, help_text="URL-friendly identifier")
     description = models.TextField(blank=True, help_text="Category description")
+
+    # Hierarchy
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='subcategories',
+        help_text="Parent category (null for main categories)",
+        db_index=True
+    )
+    is_main_category = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Main categories can only be created by admins"
+    )
+
+    # Tracking
+    created_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_categories',
+        help_text="User who created this category"
+    )
+
+    # Moderation
+    is_approved = models.BooleanField(
+        default=True,
+        help_text="Whether category is approved for public use"
+    )
+    approval_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('approved', 'Approved'),
+            ('pending', 'Pending Review'),
+            ('rejected', 'Rejected'),
+        ],
+        default='approved',
+        help_text="Approval status of the category"
+    )
+
+    # Status
     is_active = models.BooleanField(default=True, help_text="Active categories shown to users")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
-        ordering = ['name']
+        ordering = ['parent__name', 'name']
+        unique_together = [['parent', 'name']]  # Prevent duplicate sub-categories under same parent
+        indexes = [
+            models.Index(fields=['parent', 'is_active'], name='cat_parent_active_idx'),
+            models.Index(fields=['is_main_category', 'is_active'], name='cat_main_active_idx'),
+        ]
 
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
+        return self.name
+
+    def get_full_path(self):
+        """Return full category path: Parent > Child"""
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
         return self.name
 
     def get_products_count(self):
-        """Get total count of products in this category"""
+        """Get total count of products in this category (including sub-categories if main category)"""
         cache_key = f'category_{self.id}_products_count'
         count = cache.get(cache_key)
 
         if count is None:
-            count = (
-                self.books.filter(is_active=True, is_deleted=False).count() +
-                self.courses.filter(is_active=True, is_deleted=False).count() +
-                self.webinars.filter(is_active=True, is_deleted=False).count() +
-                self.services.filter(is_active=True, is_deleted=False).count()
-            )
+            # For main categories, include products from sub-categories
+            if self.is_main_category:
+                # Get all subcategories
+                subcategory_ids = list(self.subcategories.filter(is_active=True).values_list('id', flat=True))
+                all_category_ids = [self.id] + subcategory_ids
+
+                from django.db.models import Q
+                query = Q(category_id__in=all_category_ids, is_active=True, is_deleted=False)
+
+                count = (
+                    Book.objects.filter(query).count() +
+                    Course.objects.filter(query).count() +
+                    Webinar.objects.filter(query).count() +
+                    Service.objects.filter(query).count()
+                )
+            else:
+                # For sub-categories, just count direct products
+                count = (
+                    self.books.filter(is_active=True, is_deleted=False).count() +
+                    self.courses.filter(is_active=True, is_deleted=False).count() +
+                    self.webinars.filter(is_active=True, is_deleted=False).count() +
+                    self.services.filter(is_active=True, is_deleted=False).count()
+                )
             cache.set(cache_key, count, 300)  # Cache for 5 minutes
 
         return count
+
+    def clean(self):
+        """Validation logic"""
+        from django.core.exceptions import ValidationError
+
+        # Main categories cannot have parents
+        if self.is_main_category and self.parent:
+            raise ValidationError("Main categories cannot have a parent category")
+
+        # Sub-categories must have a main category parent
+        if not self.is_main_category and not self.parent:
+            raise ValidationError("Sub-categories must have a parent category")
+
+        # Only main categories or their direct children (max 2 levels)
+        if self.parent and self.parent.parent:
+            raise ValidationError("Categories can only be 2 levels deep (Main > Sub)")
+
+    def save(self, *args, **kwargs):
+        # Auto-generate slug if not provided
+        if not self.slug:
+            from django.utils.text import slugify
+            base_name = f"{self.parent.name}-{self.name}" if self.parent else self.name
+            base_slug = slugify(base_name)
+            self.slug = base_slug
+
+            # Handle duplicate slugs
+            counter = 1
+            while Category.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{base_slug}-{counter}"
+                counter += 1
+
+        # Run validation
+        self.full_clean()
+
+        super().save(*args, **kwargs)
+
+        # Clear cache
+        cache.delete(f'category_{self.id}_products_count')
+        if self.parent:
+            cache.delete(f'category_{self.parent.id}_products_count')
+            cache.delete(f'category_{self.parent.id}_subcategories')
 
 
 class SiteSettings(models.Model):
@@ -1058,3 +1178,118 @@ class ServiceChatMessage(models.Model):
         super().save(*args, **kwargs)
         # Update the parent chat's updated_at timestamp
         self.chat.save(update_fields=['updated_at'])
+
+
+# ==============================================================================
+# CONTACT & SUPPORT MODELS
+# ==============================================================================
+
+class ContactMessage(models.Model):
+    """
+    Store contact form submissions for backup and admin review.
+    Messages are also sent via email, but stored here for record keeping.
+    """
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('read', 'Read'),
+        ('replied', 'Replied'),
+        ('archived', 'Archived'),
+    ]
+
+    name = models.CharField(max_length=255, help_text="Sender's full name")
+    email = models.EmailField(help_text="Sender's email address", db_index=True)
+    subject = models.CharField(max_length=500, help_text="Message subject")
+    message = models.TextField(help_text="Message content")
+
+    # Optional: Link to user if they're logged in
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contact_messages',
+        help_text="User who sent the message (if logged in)"
+    )
+
+    # Metadata
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='new',
+        db_index=True,
+        help_text="Message status"
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text="Sender's IP address for spam prevention"
+    )
+    user_agent = models.TextField(
+        blank=True,
+        help_text="Browser/device information"
+    )
+
+    # Tracking
+    email_sent = models.BooleanField(
+        default=False,
+        help_text="Whether email notification was sent successfully"
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        help_text="Internal notes from admin"
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    replied_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['email', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.subject} ({self.created_at.strftime('%Y-%m-%d')})"
+
+    def mark_as_read(self):
+        """Mark message as read"""
+        if self.status == 'new':
+            self.status = 'read'
+            self.read_at = timezone.now()
+            self.save(update_fields=['status', 'read_at'])
+
+    def mark_as_replied(self):
+        """Mark message as replied"""
+        self.status = 'replied'
+        self.replied_at = timezone.now()
+        self.save(update_fields=['status', 'replied_at'])
+
+    @classmethod
+    def get_recent_by_ip(cls, ip_address, hours=1):
+        """Get recent messages from same IP for rate limiting"""
+        if not ip_address:
+            return cls.objects.none()
+
+        time_threshold = timezone.now() - timedelta(hours=hours)
+        return cls.objects.filter(
+            ip_address=ip_address,
+            created_at__gte=time_threshold
+        )
+
+    @classmethod
+    def get_recent_by_email(cls, email, hours=1):
+        """Get recent messages from same email for rate limiting"""
+        if not email:
+            return cls.objects.none()
+
+        time_threshold = timezone.now() - timedelta(hours=hours)
+        return cls.objects.filter(
+            email=email,
+            created_at__gte=time_threshold
+        )

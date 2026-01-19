@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 from .models import (
     User, PasswordResetToken, Category, SiteSettings, Book, Course, Webinar, Service,
     UserBrowsingHistory, UserSearchHistory, UserPreference,
-    ServiceChat, ServiceChatMessage
+    ServiceChat, ServiceChatMessage, ContactMessage
 )
 
 @admin.register(User)
@@ -49,9 +49,76 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
-    ordering = ('name',)
+    list_display = ('name', 'get_category_type', 'parent', 'get_subcategory_count', 'is_active', 'approval_status', 'created_by', 'created_at')
+    list_filter = ('is_main_category', 'is_active', 'approval_status', 'created_at')
+    search_fields = ('name', 'slug', 'description', 'created_by__username')
+    ordering = ('parent__name', 'name')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'subcategory_list')
+    autocomplete_fields = ['parent', 'created_by']
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'slug', 'description', 'parent', 'is_main_category', 'is_active')
+        }),
+        ('Approval', {
+            'fields': ('is_approved', 'approval_status', 'created_by'),
+            'description': 'Category approval settings'
+        }),
+        ('Subcategories', {
+            'fields': ('subcategory_list',),
+            'classes': ('collapse',),
+            'description': 'List of subcategories under this category'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_category_type(self, obj):
+        """Display category type"""
+        return "Main Category" if obj.is_main_category else "Sub-Category"
+    get_category_type.short_description = 'Type'
+
+    def get_subcategory_count(self, obj):
+        """Display count of subcategories"""
+        if obj.is_main_category:
+            count = obj.subcategories.count()
+            return f"{count} sub-categories"
+        return "-"
+    get_subcategory_count.short_description = 'Subcategories'
+
+    def subcategory_list(self, obj):
+        """Display list of subcategories"""
+        if obj.is_main_category:
+            subs = obj.subcategories.all()
+            if subs:
+                html = '<ul style="margin-left: 20px;">'
+                for sub in subs:
+                    status_color = 'green' if sub.is_approved else 'orange'
+                    html += f'<li><strong>{sub.name}</strong> <span style="color: {status_color};">({sub.approval_status})</span></li>'
+                html += '</ul>'
+                return mark_safe(html)
+            return "No subcategories yet"
+        return "Not applicable (this is a sub-category)"
+    subcategory_list.short_description = 'Subcategories List'
+
+    def save_model(self, request, obj, form, change):
+        """Auto-generate slug if not provided"""
+        if not obj.slug:
+            from django.utils.text import slugify
+            base_slug = slugify(obj.name)
+            slug = base_slug
+            counter = 1
+
+            # Ensure uniqueness
+            while Category.objects.filter(slug=slug).exclude(pk=obj.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            obj.slug = slug
+
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(SiteSettings)
@@ -343,3 +410,102 @@ class ServiceChatMessageAdmin(admin.ModelAdmin):
         """Show message preview"""
         return obj.message[:100] + "..." if len(obj.message) > 100 else obj.message
     get_message_preview.short_description = 'Message'
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    """
+    Admin interface for managing contact form submissions.
+    Displays all submissions with filtering, search, and status management.
+    """
+    list_display = ('name', 'email', 'subject', 'status', 'email_sent', 'created_at', 'get_user_type')
+    list_filter = ('status', 'email_sent', 'created_at', 'user__user_type')
+    search_fields = ('name', 'email', 'subject', 'message', 'ip_address')
+    ordering = ('-created_at',)
+    readonly_fields = ('user', 'ip_address', 'user_agent', 'email_sent', 'created_at', 'read_at', 'replied_at', 'formatted_message')
+    actions = ['mark_as_read', 'mark_as_replied', 'mark_as_archived']
+
+    fieldsets = (
+        ('Contact Information', {
+            'fields': ('name', 'email', 'subject')
+        }),
+        ('Message', {
+            'fields': ('formatted_message',),
+            'description': 'Original message from the contact form'
+        }),
+        ('User Information', {
+            'fields': ('user',),
+            'description': 'Linked user account (if they were logged in)'
+        }),
+        ('Status & Response', {
+            'fields': ('status', 'admin_notes'),
+            'description': 'Manage message status and add internal notes'
+        }),
+        ('Metadata', {
+            'fields': ('ip_address', 'user_agent', 'email_sent'),
+            'classes': ('collapse',),
+            'description': 'Technical information for spam prevention'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'read_at', 'replied_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_user_type(self, obj):
+        """Display user type if message is from a logged-in user"""
+        if obj.user:
+            return obj.user.user_type.upper()
+        return "Guest"
+    get_user_type.short_description = 'User Type'
+
+    def formatted_message(self, obj):
+        """Display message with proper formatting"""
+        return mark_safe(f'<div style="white-space: pre-wrap; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff;">{obj.message}</div>')
+    formatted_message.short_description = 'Message Content'
+
+    def mark_as_read(self, request, queryset):
+        """Mark selected messages as read"""
+        from django.utils import timezone
+        updated = 0
+        for message in queryset:
+            if message.status == 'new':
+                message.status = 'read'
+                message.read_at = timezone.now()
+                message.save(update_fields=['status', 'read_at'])
+                updated += 1
+
+        self.message_user(
+            request,
+            f"{updated} message(s) marked as read.",
+            'success' if updated > 0 else 'warning'
+        )
+    mark_as_read.short_description = "Mark selected as Read"
+
+    def mark_as_replied(self, request, queryset):
+        """Mark selected messages as replied"""
+        from django.utils import timezone
+        updated = 0
+        for message in queryset:
+            if message.status in ['new', 'read']:
+                message.status = 'replied'
+                message.replied_at = timezone.now()
+                message.save(update_fields=['status', 'replied_at'])
+                updated += 1
+
+        self.message_user(
+            request,
+            f"{updated} message(s) marked as replied.",
+            'success' if updated > 0 else 'warning'
+        )
+    mark_as_replied.short_description = "Mark selected as Replied"
+
+    def mark_as_archived(self, request, queryset):
+        """Archive selected messages"""
+        updated = queryset.update(status='archived')
+        self.message_user(
+            request,
+            f"{updated} message(s) archived.",
+            'success' if updated > 0 else 'warning'
+        )
+    mark_as_archived.short_description = "Archive selected messages"

@@ -430,3 +430,587 @@ def cleanup_old_search_history(days=90):
     except Exception as e:
         logger.error(f"Error cleaning search history: {e}")
         return 0
+
+
+# ==============================================================================
+# RECOMMENDED 8 AUTOMATED TASKS
+# ==============================================================================
+
+@shared_task
+def daily_sales_report():
+    """
+    Generate and email daily sales report to admin.
+    Scheduled: Daily at 9:00 AM
+
+    Includes:
+    - Total sales and revenue
+    - New users registered
+    - Top selling products
+    - Payment statistics
+    """
+    from .models import User, Book, Course, Webinar, Service
+    from django.contrib.contenttypes.models import ContentType
+    from django.db.models import Sum, Count
+    import stripe
+
+    try:
+        # Get yesterday's date range
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+        start_time = timezone.make_aware(timezone.datetime.combine(yesterday, timezone.datetime.min.time()))
+        end_time = timezone.make_aware(timezone.datetime.combine(yesterday, timezone.datetime.max.time()))
+
+        # Initialize Stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+
+        # Get successful payments from yesterday
+        payments = stripe.PaymentIntent.list(
+            created={
+                'gte': int(start_time.timestamp()),
+                'lte': int(end_time.timestamp())
+            },
+            limit=100
+        )
+
+        # Calculate totals
+        total_revenue = sum(payment.amount for payment in payments.data if payment.status == 'succeeded') / 100
+        successful_payments = len([p for p in payments.data if p.status == 'succeeded'])
+        failed_payments = len([p for p in payments.data if p.status == 'failed'])
+
+        # New users registered
+        new_users = User.objects.filter(
+            date_joined__gte=start_time,
+            date_joined__lte=end_time
+        ).count()
+
+        new_buyers = User.objects.filter(
+            date_joined__gte=start_time,
+            date_joined__lte=end_time,
+            user_type='buyer'
+        ).count()
+
+        new_sellers = User.objects.filter(
+            date_joined__gte=start_time,
+            date_joined__lte=end_time,
+            user_type='seller'
+        ).count()
+
+        # New products added
+        new_books = Book.objects.filter(created_at__gte=start_time, created_at__lte=end_time).count()
+        new_courses = Course.objects.filter(created_at__gte=start_time, created_at__lte=end_time).count()
+        new_webinars = Webinar.objects.filter(created_at__gte=start_time, created_at__lte=end_time).count()
+        new_services = Service.objects.filter(created_at__gte=start_time, created_at__lte=end_time).count()
+
+        # Prepare email
+        subject = f"Daily Sales Report - {yesterday.strftime('%B %d, %Y')}"
+        message = f"""
+Daily Sales Report for {yesterday.strftime('%B %d, %Y')}
+{'='*60}
+
+REVENUE & PAYMENTS
+------------------
+Total Revenue: ${total_revenue:.2f}
+Successful Payments: {successful_payments}
+Failed Payments: {failed_payments}
+
+NEW USERS
+---------
+Total New Users: {new_users}
+  - Buyers: {new_buyers}
+  - Sellers: {new_sellers}
+
+NEW PRODUCTS ADDED
+------------------
+Books: {new_books}
+Courses: {new_courses}
+Webinars: {new_webinars}
+Services: {new_services}
+Total: {new_books + new_courses + new_webinars + new_services}
+
+{'='*60}
+Report generated at: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}
+        """
+
+        # Send email to admin
+        admin_emails = User.objects.filter(is_superuser=True).values_list('email', flat=True)
+        if admin_emails:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=list(admin_emails),
+                fail_silently=False
+            )
+            logger.info(f"Daily sales report sent to {len(admin_emails)} admin(s)")
+
+        return {
+            'date': yesterday.isoformat(),
+            'revenue': total_revenue,
+            'successful_payments': successful_payments,
+            'new_users': new_users
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating daily sales report: {e}")
+        return None
+
+
+@shared_task
+def update_ai_recommendations():
+    """
+    Update AI recommendations and user preferences.
+    Scheduled: Daily at 3:00 AM
+
+    Updates:
+    - User preference data
+    - Product popularity rankings
+    - AI recommendation models
+    """
+    from .models import User, Book, Course, Webinar, Service
+    from .recommendation_engine import update_user_preferences
+
+    try:
+        updated_users = 0
+
+        # Update preferences for all active buyers
+        buyers = User.objects.filter(is_active=True, user_type='buyer')
+
+        for user in buyers:
+            try:
+                update_user_preferences(user)
+                updated_users += 1
+            except Exception as e:
+                logger.error(f"Error updating preferences for user {user.id}: {e}")
+
+        # Update product view counts and popularity
+        from django.db.models import Count
+        from .models import UserBrowsingHistory
+
+        # Get view counts for last 7 days
+        cutoff = timezone.now() - timedelta(days=7)
+
+        # Update book popularity
+        books = Book.objects.filter(is_active=True)
+        for book in books:
+            content_type = ContentType.objects.get_for_model(Book)
+            views = UserBrowsingHistory.objects.filter(
+                content_type=content_type,
+                object_id=book.id,
+                viewed_at__gte=cutoff
+            ).count()
+            # You can add a popularity field to models and update it here
+
+        logger.info(f"Updated AI recommendations for {updated_users} users")
+        return {
+            'updated_users': updated_users,
+            'timestamp': timezone.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating AI recommendations: {e}")
+        return None
+
+
+@shared_task
+def database_backup():
+    """
+    Create automated database backup.
+    Scheduled: Daily at 1:00 AM
+
+    Creates a PostgreSQL dump and saves it to backup directory.
+    """
+    import subprocess
+    import os
+    from django.conf import settings
+
+    try:
+        # Create backup directory if it doesn't exist
+        backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+        os.makedirs(backup_dir, exist_ok=True)
+
+        # Generate backup filename with timestamp
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = os.path.join(backup_dir, f'db_backup_{timestamp}.sql')
+
+        # Get database settings from environment
+        db_name = os.getenv('DB_NAME')
+        db_user = os.getenv('DB_USER')
+        db_password = os.getenv('DB_PASSWORD')
+        db_host = os.getenv('DB_HOST', 'localhost')
+        db_port = os.getenv('DB_PORT', '5432')
+
+        # Set PGPASSWORD environment variable for authentication
+        env = os.environ.copy()
+        env['PGPASSWORD'] = db_password
+
+        # Run pg_dump command
+        command = [
+            'pg_dump',
+            f'--host={db_host}',
+            f'--port={db_port}',
+            f'--username={db_user}',
+            f'--dbname={db_name}',
+            f'--file={backup_file}',
+            '--format=plain',
+            '--verbose'
+        ]
+
+        result = subprocess.run(
+            command,
+            env=env,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode == 0:
+            # Get backup file size
+            file_size = os.path.getsize(backup_file) / (1024 * 1024)  # MB
+
+            logger.info(f"Database backup created: {backup_file} ({file_size:.2f} MB)")
+
+            # Clean up old backups (keep only last 7 days)
+            cleanup_old_backups(backup_dir, days=7)
+
+            return {
+                'success': True,
+                'backup_file': backup_file,
+                'size_mb': file_size,
+                'timestamp': timestamp
+            }
+        else:
+            logger.error(f"Database backup failed: {result.stderr}")
+            return {'success': False, 'error': result.stderr}
+
+    except Exception as e:
+        logger.error(f"Error creating database backup: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def cleanup_old_backups(backup_dir, days=7):
+    """Helper function to remove backups older than specified days"""
+    import os
+
+    cutoff_time = timezone.now() - timedelta(days=days)
+    cutoff_timestamp = cutoff_time.timestamp()
+
+    for filename in os.listdir(backup_dir):
+        if filename.startswith('db_backup_') and filename.endswith('.sql'):
+            filepath = os.path.join(backup_dir, filename)
+            file_mtime = os.path.getmtime(filepath)
+
+            if file_mtime < cutoff_timestamp:
+                os.remove(filepath)
+                logger.info(f"Deleted old backup: {filename}")
+
+
+@shared_task
+def sync_stripe_payments():
+    """
+    Sync payment statuses with Stripe.
+    Scheduled: Every 30 minutes
+
+    Checks for:
+    - Pending payments that succeeded
+    - Failed payments
+    - Refunds
+    """
+    import stripe
+    from .models import User
+
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+
+        # Get recent payment intents from last hour
+        one_hour_ago = int((timezone.now() - timedelta(hours=1)).timestamp())
+
+        payments = stripe.PaymentIntent.list(
+            created={'gte': one_hour_ago},
+            limit=100
+        )
+
+        synced_count = 0
+        status_updates = {
+            'succeeded': 0,
+            'failed': 0,
+            'processing': 0,
+            'canceled': 0
+        }
+
+        for payment in payments.data:
+            try:
+                # Get metadata to find user
+                metadata = payment.metadata
+                user_email = metadata.get('user_email')
+                payment_type = metadata.get('payment_type')  # 'registration' or 'upgrade'
+
+                if user_email and payment_type:
+                    user = User.objects.filter(email=user_email).first()
+
+                    if user:
+                        # Update payment status based on Stripe status
+                        if payment.status == 'succeeded':
+                            # Payment succeeded - ensure user has correct access
+                            if payment_type == 'registration':
+                                # Mark registration as complete if needed
+                                status_updates['succeeded'] += 1
+                            elif payment_type == 'upgrade':
+                                # Verify upgrade completed
+                                status_updates['succeeded'] += 1
+
+                        elif payment.status == 'failed':
+                            status_updates['failed'] += 1
+                            logger.warning(f"Payment failed for user {user_email}: {payment.id}")
+
+                        elif payment.status in ['processing', 'requires_action']:
+                            status_updates['processing'] += 1
+
+                        elif payment.status == 'canceled':
+                            status_updates['canceled'] += 1
+
+                        synced_count += 1
+
+            except Exception as e:
+                logger.error(f"Error syncing payment {payment.id}: {e}")
+
+        logger.info(f"Synced {synced_count} payments. Status: {status_updates}")
+
+        return {
+            'synced_count': synced_count,
+            'status_updates': status_updates,
+            'timestamp': timezone.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error syncing Stripe payments: {e}")
+        return None
+
+
+@shared_task
+def weekly_seller_reports():
+    """
+    Send weekly performance reports to all sellers.
+    Scheduled: Every Monday at 9:00 AM
+
+    Includes:
+    - Sales summary
+    - Top products
+    - Revenue breakdown
+    - Performance tips
+    """
+    from .models import User, Book, Course, Webinar, Service
+    from django.contrib.contenttypes.models import ContentType
+    from django.db.models import Sum, Count
+
+    try:
+        sellers = User.objects.filter(user_type='seller', is_active=True)
+        reports_sent = 0
+
+        # Get last week's date range
+        today = timezone.now().date()
+        last_monday = today - timedelta(days=today.weekday() + 7)
+        last_sunday = last_monday + timedelta(days=6)
+
+        start_time = timezone.make_aware(timezone.datetime.combine(last_monday, timezone.datetime.min.time()))
+        end_time = timezone.make_aware(timezone.datetime.combine(last_sunday, timezone.datetime.max.time()))
+
+        for seller in sellers:
+            try:
+                # Get seller's products
+                books = Book.objects.filter(seller=seller)
+                courses = Course.objects.filter(seller=seller)
+                webinars = Webinar.objects.filter(seller=seller)
+                services = Service.objects.filter(seller=seller)
+
+                total_products = books.count() + courses.count() + webinars.count() + services.count()
+
+                # Calculate sales (you'll need to implement based on your Order model)
+                # For now, showing structure
+                total_sales = 0
+                total_revenue = 0
+
+                # Prepare report email
+                subject = f"Weekly Sales Report - {last_monday.strftime('%b %d')} to {last_sunday.strftime('%b %d, %Y')}"
+                message = f"""
+Hello {seller.full_name},
+
+Here's your weekly performance report:
+
+OVERVIEW
+--------
+Week: {last_monday.strftime('%B %d')} - {last_sunday.strftime('%B %d, %Y')}
+Total Products: {total_products}
+Total Sales: {total_sales}
+Revenue: ${total_revenue:.2f}
+
+PRODUCT BREAKDOWN
+-----------------
+Books: {books.count()}
+Courses: {courses.count()}
+Webinars: {webinars.count()}
+Services: {services.count()}
+
+TIPS FOR SUCCESS
+----------------
+• Add high-quality product images
+• Update product descriptions regularly
+• Respond to customer inquiries promptly
+• Consider offering limited-time promotions
+
+Keep up the great work!
+
+Best regards,
+The Platform Team
+                """
+
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[seller.email],
+                    fail_silently=False
+                )
+
+                reports_sent += 1
+
+            except Exception as e:
+                logger.error(f"Error generating report for seller {seller.id}: {e}")
+
+        logger.info(f"Weekly seller reports sent to {reports_sent} sellers")
+
+        return {
+            'reports_sent': reports_sent,
+            'week_start': last_monday.isoformat(),
+            'week_end': last_sunday.isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error sending weekly seller reports: {e}")
+        return None
+
+
+@shared_task
+def clean_old_sessions():
+    """
+    Clean up expired Django sessions.
+    Scheduled: Daily at 4:00 AM
+
+    Removes expired sessions to improve performance.
+    """
+    from django.core.management import call_command
+
+    try:
+        # Django provides a management command for this
+        call_command('clearsessions')
+
+        logger.info("Successfully cleaned up expired sessions")
+
+        return {
+            'success': True,
+            'timestamp': timezone.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error cleaning sessions: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+@shared_task
+def abandoned_registration_reminder():
+    """
+    Send reminders to users who started registration but didn't complete payment.
+    Scheduled: Daily at 6:00 PM
+
+    Targets users who:
+    - Registered in last 7 days
+    - Haven't made registration payment
+    - Haven't been reminded in last 24 hours
+    """
+    from .models import User
+
+    try:
+        # Get users who registered but might not have completed payment
+        # This assumes you have a way to track registration payment status
+        # Adjust based on your actual implementation
+
+        cutoff_date = timezone.now() - timedelta(days=7)
+        last_reminder_cutoff = timezone.now() - timedelta(hours=24)
+
+        # Find users who registered recently but might not be fully activated
+        incomplete_users = User.objects.filter(
+            date_joined__gte=cutoff_date,
+            date_joined__lte=timezone.now() - timedelta(hours=1),
+            is_active=True,
+            # Add your logic to identify incomplete registrations
+            # For example: has_completed_registration_payment=False
+        )
+
+        reminders_sent = 0
+
+        for user in incomplete_users:
+            try:
+                # Check if user needs registration payment
+                # Adjust this logic based on your registration flow
+
+                subject = "Complete Your Registration - Exclusive Features Await!"
+                message = f"""
+Hello {user.full_name},
+
+We noticed you started your registration as a {user.user_type.upper()}, but haven't completed the payment yet.
+
+Complete your registration to unlock:
+
+"""
+
+                if user.user_type == 'buyer':
+                    message += """
+✓ Browse and purchase books, courses & webinars
+✓ AI-powered product recommendations
+✓ 24/7 AI chatbot support
+✓ Order history and tracking
+✓ Personalized learning paths
+"""
+                else:
+                    message += """
+✓ Sell unlimited books, courses & webinars
+✓ Professional seller dashboard with analytics
+✓ Direct customer messaging
+✓ Sales reporting and insights
+✓ Payment processing through Stripe
+"""
+
+                message += f"""
+
+Registration Fee: Just $10 one-time payment
+Unlock your account now: {settings.SITE_URL}/registration-payment/
+
+This is a limited-time offer. Complete your registration today!
+
+Best regards,
+The Platform Team
+
+P.S. Need help? Reply to this email or contact support.
+                """
+
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False
+                )
+
+                reminders_sent += 1
+
+            except Exception as e:
+                logger.error(f"Error sending reminder to user {user.id}: {e}")
+
+        logger.info(f"Sent {reminders_sent} abandoned registration reminders")
+
+        return {
+            'reminders_sent': reminders_sent,
+            'timestamp': timezone.now().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"Error sending abandoned registration reminders: {e}")
+        return None

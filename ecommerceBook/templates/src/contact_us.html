@@ -7,364 +7,581 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <title>Contact Us - Vortex AI</title>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .info-card {
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .back-button-fixed {
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+        }
+
+        /* Form animations */
+        .form-field {
+            transition: all 0.3s ease;
+        }
+
+        .form-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.2);
+        }
+
+        .field-valid {
+            border-color: #10b981 !important;
+        }
+
+        .field-invalid {
+            border-color: #ef4444 !important;
+        }
+
+        .slide-in {
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple:active::after {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
 </head>
 
-<body class="font-urbanist bg-stone-50">
-    {% if user.is_authenticated %}
-    <!-- Sidebar Toggle Button (Mobile) -->
-    <button id="sidebar-toggle" class="md:hidden fixed top-4 left-4 z-50 p-2 bg-teal-900 text-white rounded-lg shadow-lg">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-    </button>
-
-    <!-- Include Sidebar for logged-in users -->
-    {% include 'includes/sidebar.html' with active_page='contact' show_bottom_actions=True %}
-    {% endif %}
-
-    <!-- Main container -->
-    <div class="{% if user.is_authenticated %}md:ml-64{% endif %} min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
+<body class="font-urbanist bg-zinc-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
                 <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-12 h-12">
-                    <div class="text-teal-900 text-xl sm:text-2xl lg:text-3xl font-bold font-['Inter'] uppercase hidden sm:block">
-                        VORTEX AI
-                    </div>
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10">
+                        <span class="text-teal-900 text-lg sm:text-xl font-bold font-urbanist uppercase">VORTEX AI</span>
+                    </a>
                 </div>
 
-                <!-- Auth buttons (only show if not logged in) -->
-                {% if not user.is_authenticated %}
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <a href="{% url 'login' %}" class="px-4 sm:px-8 py-2.5 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-teal-900 bg-white text-teal-900 text-sm font-normal font-['Poppins'] hover:bg-teal-900 hover:text-white hover:shadow-md transition-all duration-300">
-                        Login
-                    </a>
-                    <a href="{% url 'register' %}" class="px-4 sm:px-8 py-2.5 bg-teal-900 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] text-white text-sm font-normal font-['Poppins'] hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 hover:shadow-md transition-all duration-300">
-                        Sign up
+                <!-- Desktop Navigation -->
+                {% if user.is_authenticated %}
+                <div class="hidden md:flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Welcome, {{ user.username }}</span>
+                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}"
+                       class="px-6 py-2.5 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors duration-200 text-sm font-medium">
+                        Dashboard
                     </a>
                 </div>
                 {% else %}
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-600">Welcome, {{ user.username }}</span>
-                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}" class="px-4 py-2 bg-teal-900 text-white rounded-lg text-sm hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 transition-all duration-300">
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'login' %}"
+                       class="px-6 py-2.5 rounded-lg shadow-sm outline outline-1 outline-offset-[-1px] outline-teal-900 bg-white text-teal-900 hover:bg-teal-900 hover:text-white transition-all duration-200 text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{% url 'register' %}"
+                       class="px-6 py-2.5 bg-teal-900 text-white rounded-lg shadow-sm hover:bg-teal-800 transition-colors duration-200 text-sm font-medium">
+                        Sign Up
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Mobile Menu Toggle -->
+                <button id="mobileMenuToggle" class="md:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+                {% if user.is_authenticated %}
+                <div class="space-y-2">
+                    <div class="px-4 py-2 text-sm text-gray-600">Welcome, {{ user.username }}</div>
+                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}"
+                       class="block px-4 py-2.5 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors text-sm font-medium text-center">
                         Dashboard
+                    </a>
+                </div>
+                {% else %}
+                <div class="space-y-2">
+                    <a href="{% url 'login' %}"
+                       class="block px-4 py-2.5 text-center rounded-lg outline outline-1 outline-teal-900 text-teal-900 hover:bg-teal-900 hover:text-white transition-all text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{% url 'register' %}"
+                       class="block px-4 py-2.5 text-center bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors text-sm font-medium">
+                        Sign Up
                     </a>
                 </div>
                 {% endif %}
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main content -->
-        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-            <div class="max-w-6xl mx-auto">
-                <!-- Page Header -->
-                <div class="text-center mb-12">
-                    <h1 class="text-4xl sm:text-5xl font-bold text-teal-900 mb-4">Get in Touch</h1>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Have a question or need assistance? We're here to help! Send us a message and we'll respond within 24-48 hours.
-                    </p>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Back Button -->
+        <div class="back-button-fixed mb-6">
+            <button onclick="window.history.back()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span class="text-sm font-medium">Back</span>
+            </button>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="text-center mb-12 fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full mb-6 animate-float">
+                <svg class="w-10 h-10 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-teal-900 via-cyan-800 to-teal-900 bg-clip-text text-transparent mb-4">
+                Get in Touch
+            </h1>
+            <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+                Have a question or need assistance? We're here to help! Send us a message and we'll respond within 24-48 hours.
+            </p>
+        </div>
+
+        <!-- Contact Content -->
+        <div class="max-w-5xl mx-auto">
+            <!-- Contact Info Cards -->
+            <div class="grid md:grid-cols-3 gap-6 mb-12">
+                <!-- Email Card -->
+                <div class="info-card fade-in bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100 hover:border-teal-200">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full mb-4">
+                            <svg class="w-8 h-8 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2 text-lg">Email Us</h3>
+                        <p class="text-sm text-gray-600 mb-3">Our support team is here to help</p>
+                        <a href="mailto:support@vortexai.com" class="text-teal-900 hover:text-teal-700 text-sm font-semibold transition-colors">
+                            support@vortexai.com
+                        </a>
+                    </div>
                 </div>
 
-                <div class="grid lg:grid-cols-3 gap-8">
-                    <!-- Contact Information Cards -->
-                    <div class="lg:col-span-1 space-y-6">
-                        <!-- Email Card -->
-                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-                            <div class="flex items-start gap-4">
-                                <div class="p-3 bg-teal-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900 mb-1">Email Us</h3>
-                                    <p class="text-sm text-gray-600 mb-2">Our support team is here to help</p>
-                                    <a href="mailto:support@vortexai.com" class="text-teal-900 hover:underline text-sm font-medium">
-                                        support@vortexai.com
-                                    </a>
-                                </div>
-                            </div>
+                <!-- Response Time Card -->
+                <div class="info-card fade-in bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100 hover:border-purple-200" style="animation-delay: 0.1s">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full mb-4">
+                            <svg class="w-8 h-8 text-purple-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2 text-lg">Response Time</h3>
+                        <p class="text-sm text-gray-700">
+                            We typically respond within <span class="font-bold text-purple-900">24-48 hours</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- AI Support Card -->
+                <div class="info-card fade-in bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-lg p-6 border-2 border-amber-200 hover:border-amber-300" style="animation-delay: 0.2s">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="p-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full mb-4">
+                            <svg class="w-8 h-8 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2 text-lg">AI Support</h3>
+                        <p class="text-sm text-gray-700 mb-3">Get instant answers</p>
+                        <a href="{% url 'chatbot' %}" class="inline-flex items-center text-teal-900 hover:text-teal-700 font-semibold text-sm transition-colors">
+                            Visit Chatbot
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="fade-in bg-white rounded-3xl shadow-2xl border-2 border-gray-100 p-8 sm:p-10" style="animation-delay: 0.3s">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="p-3 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl">
+                        <svg class="w-6 h-6 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-teal-900">Send Us a Message</h2>
+                </div>
+
+                <!-- Success/Error Message Area -->
+                <div id="messageArea" class="mb-6 hidden"></div>
+
+                <form method="POST" action="{% url 'contact_us' %}" class="space-y-6" id="contactForm" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Name and Email Row -->
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <!-- Name Field -->
+                        <div>
+                            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Full Name <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                required
+                                value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}"
+                                placeholder="John Doe"
+                                class="form-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-0 focus:border-teal-500 transition-all"
+                            >
+                            <div class="validation-message hidden mt-2 text-sm"></div>
                         </div>
 
-                        <!-- Response Time Card -->
-                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-                            <div class="flex items-start gap-4">
-                                <div class="p-3 bg-purple-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-purple-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900 mb-1">Response Time</h3>
-                                    <p class="text-sm text-gray-600">
-                                        We typically respond within 24-48 hours during business days
-                                    </p>
-                                </div>
+                        <!-- Email Field -->
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Email Address <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                required
+                                value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
+                                placeholder="your.email@example.com"
+                                class="form-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-0 focus:border-teal-500 transition-all"
+                            >
+                            <div class="validation-message hidden mt-2 text-sm"></div>
+                        </div>
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div>
+                        <label for="subject" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Subject <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="subject"
+                            name="subject"
+                            required
+                            placeholder="How can we help you?"
+                            class="form-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-0 focus:border-teal-500 transition-all"
+                        >
+                        <div class="validation-message hidden mt-2 text-sm"></div>
+                    </div>
+
+                    <!-- Message Field -->
+                    <div>
+                        <label for="message" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Message <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            id="message"
+                            name="message"
+                            required
+                            rows="6"
+                            placeholder="Please provide details about your inquiry..."
+                            class="form-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-0 focus:border-teal-500 transition-all resize-none"
+                            maxlength="1000"
+                        ></textarea>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="validation-message hidden text-sm"></div>
+                            <div class="text-sm text-gray-500">
+                                <span id="charCount">0</span> / 1000 characters
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Support Hours Card -->
-                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-                            <div class="flex items-start gap-4">
-                                <div class="p-3 bg-blue-100 rounded-lg">
-                                    <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900 mb-1">Support Hours</h3>
-                                    <p class="text-sm text-gray-600">
-                                        Monday - Friday: 9:00 AM - 6:00 PM EST<br>
-                                        Weekend: Limited support
-                                    </p>
-                                </div>
-                            </div>
+                    <!-- Submit Button -->
+                    <div class="flex items-center justify-between pt-4">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>Secure & Private</span>
                         </div>
-
-                        <!-- FAQ Link -->
-                        <div class="bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl p-6 border border-teal-200">
-                            <h3 class="font-semibold text-gray-900 mb-2">Quick Answers</h3>
-                            <p class="text-sm text-gray-600 mb-4">
-                                Check out our AI Support for instant answers to common questions
-                            </p>
-                            <a href="{% url 'chatbot' %}" class="inline-flex items-center text-teal-900 hover:text-teal-700 font-medium text-sm">
-                                Visit AI Support
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        <button
+                            type="submit"
+                            id="submitBtn"
+                            class="ripple px-8 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl shadow-lg hover:from-teal-700 hover:to-cyan-700 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-teal-300 transition-all duration-300 transform hover:scale-105 font-bold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                            <span class="flex items-center gap-2">
+                                <svg id="submitIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                 </svg>
-                            </a>
-                        </div>
+                                <span id="btnText">Send Message</span>
+                            </span>
+                        </button>
                     </div>
-
-                    <!-- Contact Form -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-10">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-6">Send Us a Message</h2>
-
-                            <!-- Success/Error Message Area -->
-                            <div id="messageArea" class="mb-6 hidden"></div>
-
-                            <form method="POST" action="{% url 'contact_us' %}" class="space-y-6" id="contactForm">
-                                {% csrf_token %}
-
-                                <!-- Two column layout for name and email -->
-                                <div class="grid sm:grid-cols-2 gap-6">
-                                    <!-- Name Field -->
-                                    <div>
-                                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Full Name <span class="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            name="name"
-                                            required
-                                            value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}"
-                                            placeholder="John Doe"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        >
-                                    </div>
-
-                                    <!-- Email Field -->
-                                    <div>
-                                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Email Address <span class="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            required
-                                            value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
-                                            placeholder="your.email@example.com"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Subject Field -->
-                                <div>
-                                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Subject <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="subject"
-                                        name="subject"
-                                        required
-                                        placeholder="How can we help you?"
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                                    >
-                                </div>
-
-                                <!-- Message Field -->
-                                <div>
-                                    <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Message <span class="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        id="message"
-                                        name="message"
-                                        required
-                                        rows="6"
-                                        placeholder="Please provide details about your inquiry..."
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
-                                    ></textarea>
-                                    <p class="mt-2 text-sm text-gray-500">Minimum 10 characters</p>
-                                </div>
-
-                                <!-- Submit Button -->
-                                <div class="flex justify-end">
-                                    <button
-                                        type="submit"
-                                        id="submitBtn"
-                                        class="px-8 py-3 bg-teal-900 text-white rounded-lg shadow-md hover:bg-teal-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 font-medium"
-                                    >
-                                        <span class="flex items-center gap-2">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <span id="btnText">Send Message</span>
-                                        </span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <!-- Footer -->
-        <footer class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white border-t border-gray-200 mt-auto">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
-                    <!-- Copyright and links -->
-                    <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
-                        <div class="text-zinc-800 text-xs font-medium font-['Urbanist'] leading-none">
-                            Copyright 2025 Vortex AI
-                        </div>
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <a href="{% url 'privacy_policy' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
-                                Privacy Policy
-                            </a>
-                            <a href="{% url 'contact_us' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
-                                Contact
-                            </a>
-                        </div>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <!-- Copyright and Links -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
+                    <div class="text-zinc-800 text-sm font-medium font-urbanist">
+                        Copyright 2025 Vortex AI
                     </div>
-
-                    <!-- Social icons -->
-                    <div class="flex items-center gap-3">
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                    <div class="flex items-center gap-4">
+                        <a href="{% url 'privacy_policy' %}" class="text-gray-600 text-sm font-normal font-urbanist hover:text-teal-900 transition-colors">
+                            Privacy Policy
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                        <a href="{% url 'contact_us' %}" class="text-gray-600 text-sm font-normal font-urbanist hover:text-teal-900 transition-colors">
+                            Contact
                         </a>
                     </div>
                 </div>
+
+                <!-- Social Icons -->
+                <div class="flex items-center gap-3">
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                    </a>
+                </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </footer>
 
-    {% if user.is_authenticated %}
-    <!-- Sidebar Toggle Script -->
+    <!-- JavaScript -->
     <script>
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebar = document.getElementById('sidebar');
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
 
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                sidebar.classList.toggle('-translate-x-full');
-            });
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
 
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth < 768 && !sidebar.contains(e.target) && e.target !== sidebarToggle) {
-                    sidebar.classList.add('-translate-x-full');
+        // Fade in on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
                 }
             });
+        }, observerOptions);
 
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    sidebar.classList.remove('-translate-x-full');
-                }
-            });
-        }
-    </script>
-    {% endif %}
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-    <!-- Form Submission Handler -->
-    <script>
+        // Form elements
         const contactForm = document.getElementById('contactForm');
         const messageArea = document.getElementById('messageArea');
         const submitBtn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btnText');
+        const submitIcon = document.getElementById('submitIcon');
+        const charCount = document.getElementById('charCount');
 
+        // Form fields
+        const nameField = document.getElementById('name');
+        const emailField = document.getElementById('email');
+        const subjectField = document.getElementById('subject');
+        const messageField = document.getElementById('message');
+
+        // Character counter
+        messageField.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        // Validation function
+        function validateField(field, validationType = 'text') {
+            const value = field.value.trim();
+            const validationMsg = field.parentElement.querySelector('.validation-message');
+            let isValid = true;
+            let message = '';
+
+            if (value === '') {
+                isValid = false;
+                message = 'This field is required';
+            } else {
+                switch(validationType) {
+                    case 'email':
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            isValid = false;
+                            message = 'Please enter a valid email address';
+                        }
+                        break;
+                    case 'message':
+                        if (value.length < 10) {
+                            isValid = false;
+                            message = 'Message must be at least 10 characters';
+                        }
+                        break;
+                }
+            }
+
+            if (isValid) {
+                field.classList.remove('field-invalid', 'border-red-500');
+                field.classList.add('field-valid');
+                validationMsg.classList.add('hidden');
+            } else {
+                field.classList.remove('field-valid');
+                field.classList.add('field-invalid', 'border-red-500');
+                validationMsg.textContent = message;
+                validationMsg.classList.remove('hidden');
+                validationMsg.classList.add('text-red-500');
+            }
+
+            return isValid;
+        }
+
+        // Add blur listeners
+        nameField.addEventListener('blur', () => validateField(nameField));
+        emailField.addEventListener('blur', () => validateField(emailField, 'email'));
+        subjectField.addEventListener('blur', () => validateField(subjectField));
+        messageField.addEventListener('blur', () => validateField(messageField, 'message'));
+
+        // Show message function
         function showMessage(message, isSuccess) {
             messageArea.innerHTML = `
-                <div class="p-4 rounded-lg ${isSuccess ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 ${isSuccess ? 'text-green-600' : 'text-red-600'}" fill="currentColor" viewBox="0 0 20 20">
-                            ${isSuccess
-                                ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
-                                : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>'
-                            }
-                        </svg>
-                        <span class="${isSuccess ? 'text-green-800' : 'text-red-800'}">${message}</span>
+                <div class="slide-in p-5 rounded-2xl ${isSuccess ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200' : 'bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200'} shadow-lg">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 ${isSuccess ? 'text-green-600' : 'text-red-600'}" fill="currentColor" viewBox="0 0 20 20">
+                                ${isSuccess
+                                    ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
+                                    : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>'
+                                }
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold ${isSuccess ? 'text-green-900' : 'text-red-900'} text-lg mb-1">
+                                ${isSuccess ? 'Success!' : 'Error'}
+                            </p>
+                            <p class="${isSuccess ? 'text-green-800' : 'text-red-800'}">${message}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.parentElement.classList.add('hidden')" class="flex-shrink-0 text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
             messageArea.classList.remove('hidden');
-
-            // Scroll to message
             messageArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            // Auto hide after 10 seconds
             setTimeout(() => {
                 messageArea.classList.add('hidden');
             }, 10000);
         }
 
+        // Form submission
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Validate form
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const subject = document.getElementById('subject').value.trim();
-            const message = document.getElementById('message').value.trim();
+            // Validate all fields
+            const isNameValid = validateField(nameField);
+            const isEmailValid = validateField(emailField, 'email');
+            const isSubjectValid = validateField(subjectField);
+            const isMessageValid = validateField(messageField, 'message');
 
-            if (!name || !email || !subject || !message) {
-                showMessage('All fields are required.', false);
+            if (!isNameValid || !isEmailValid || !isSubjectValid || !isMessageValid) {
+                showMessage('Please fill in all fields correctly.', false);
                 return;
             }
 
-            if (message.length < 10) {
-                showMessage('Message must be at least 10 characters long.', false);
-                return;
-            }
-
-            // Disable button
+            // Disable button and show loading
             submitBtn.disabled = true;
             submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
             btnText.textContent = 'Sending...';
+            submitIcon.innerHTML = '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>';
+            submitIcon.classList.add('animate-spin');
 
             try {
                 const formData = new FormData(contactForm);
@@ -381,6 +598,12 @@
                 if (data.success) {
                     showMessage(data.message || 'Thank you for contacting us! We will respond to your inquiry within 24-48 hours.', true);
                     contactForm.reset();
+                    charCount.textContent = '0';
+
+                    // Reset validation states
+                    document.querySelectorAll('.form-field').forEach(field => {
+                        field.classList.remove('field-valid', 'field-invalid', 'border-red-500');
+                    });
                 } else {
                     showMessage(data.message || 'There was an error sending your message. Please try again.', false);
                 }
@@ -391,6 +614,8 @@
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
                 btnText.textContent = 'Send Message';
+                submitIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>';
+                submitIcon.classList.remove('animate-spin');
             }
         });
     </script>

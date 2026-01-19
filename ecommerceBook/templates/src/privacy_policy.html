@@ -1,339 +1,603 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'urbanist': ['Urbanist', 'sans-serif'],
+                        'sans': ['Urbanist', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <title>Privacy Policy - Vortex AI</title>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        #reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(to right, #0d9488, #06b6d4);
+            width: 0%;
+            z-index: 100;
+            transition: width 0.1s ease;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg);
+            }
+        }
+
+        .float-animation {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .toc-item {
+            transition: all 0.3s ease;
+        }
+
+        .toc-item.active {
+            background: linear-gradient(to right, #0d9488, #0891b2);
+            color: white;
+            font-weight: 600;
+            transform: translateX(4px);
+        }
+
+        .section-card {
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #backToTop {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        #backToTop:hover {
+            transform: scale(1.1) translateY(-2px);
+        }
+
+        .back-button-fixed {
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+        }
+    </style>
 </head>
 
-<body class="font-urbanist bg-stone-50">
-    {% if user.is_authenticated %}
-    <!-- Sidebar Toggle Button (Mobile) -->
-    <button id="sidebar-toggle" class="md:hidden fixed top-4 left-4 z-50 p-2 bg-teal-900 text-white rounded-lg shadow-lg">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-    </button>
+<body class="font-urbanist bg-zinc-50">
+    <!-- Reading Progress Bar -->
+    <div id="reading-progress"></div>
 
-    <!-- Include Sidebar for logged-in users -->
-    {% include 'includes/sidebar.html' with active_page='privacy' show_bottom_actions=True %}
-    {% endif %}
-
-    <!-- Main container -->
-    <div class="{% if user.is_authenticated %}md:ml-64{% endif %} min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
                 <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-12 h-12">
-                    <div class="text-teal-900 text-xl sm:text-2xl lg:text-3xl font-bold font-['Inter'] uppercase hidden sm:block">
-                        VORTEX AI
-                    </div>
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-8 h-8 sm:w-10 sm:h-10">
+                        <span class="text-teal-900 text-lg sm:text-xl font-bold font-urbanist uppercase">VORTEX AI</span>
+                    </a>
                 </div>
 
-                <!-- Auth buttons (only show if not logged in) -->
-                {% if not user.is_authenticated %}
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <a href="{% url 'login' %}" class="px-4 sm:px-8 py-2.5 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-teal-900 bg-white text-teal-900 text-sm font-normal font-['Poppins'] hover:bg-teal-900 hover:text-white hover:shadow-md transition-all duration-300">
-                        Login
-                    </a>
-                    <a href="{% url 'register' %}" class="px-4 sm:px-8 py-2.5 bg-teal-900 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] text-white text-sm font-normal font-['Poppins'] hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 hover:shadow-md transition-all duration-300">
-                        Sign up
+                <!-- Desktop Navigation -->
+                {% if user.is_authenticated %}
+                <div class="hidden md:flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Welcome, {{ user.username }}</span>
+                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}"
+                       class="px-6 py-2.5 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors duration-200 text-sm font-medium">
+                        Dashboard
                     </a>
                 </div>
                 {% else %}
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-600">Welcome, {{ user.username }}</span>
-                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}" class="px-4 py-2 bg-teal-900 text-white rounded-lg text-sm hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 transition-all duration-300">
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'login' %}"
+                       class="px-6 py-2.5 rounded-lg shadow-sm outline outline-1 outline-offset-[-1px] outline-teal-900 bg-white text-teal-900 hover:bg-teal-900 hover:text-white transition-all duration-200 text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{% url 'register' %}"
+                       class="px-6 py-2.5 bg-teal-900 text-white rounded-lg shadow-sm hover:bg-teal-800 transition-colors duration-200 text-sm font-medium">
+                        Sign Up
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Mobile Menu Toggle -->
+                <button id="mobileMenuToggle" class="md:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+                {% if user.is_authenticated %}
+                <div class="space-y-2">
+                    <div class="px-4 py-2 text-sm text-gray-600">Welcome, {{ user.username }}</div>
+                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}"
+                       class="block px-4 py-2.5 bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors text-sm font-medium text-center">
                         Dashboard
+                    </a>
+                </div>
+                {% else %}
+                <div class="space-y-2">
+                    <a href="{% url 'login' %}"
+                       class="block px-4 py-2.5 text-center rounded-lg outline outline-1 outline-teal-900 text-teal-900 hover:bg-teal-900 hover:text-white transition-all text-sm font-medium">
+                        Login
+                    </a>
+                    <a href="{% url 'register' %}"
+                       class="block px-4 py-2.5 text-center bg-teal-900 text-white rounded-lg hover:bg-teal-800 transition-colors text-sm font-medium">
+                        Sign Up
                     </a>
                 </div>
                 {% endif %}
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main content -->
-        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-            <div class="max-w-5xl mx-auto">
-                <!-- Page Title -->
-                <div class="mb-8">
-                    <h1 class="text-4xl font-bold text-teal-900 mb-2">Privacy Policy</h1>
-                    <p class="text-gray-600">Last updated: December 1, 2025</p>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Back Button - Sticky at top of content -->
+        <div class="back-button-fixed mb-6">
+            <button onclick="window.history.back()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                <span class="text-sm font-medium">Back</span>
+            </button>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="text-center mb-16 fade-in">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full mb-6 float-animation">
+                <svg class="w-12 h-12 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-teal-900 via-cyan-800 to-teal-900 bg-clip-text text-transparent mb-6">
+                Privacy Policy
+            </h1>
+            <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-4">
+                Your privacy is important to us. This policy outlines how we collect, use, and protect your personal information.
+            </p>
+            <p class="text-sm text-gray-500">Last updated: January 19, 2025</p>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid lg:grid-cols-4 gap-8">
+            <!-- Table of Contents - Sidebar -->
+            <aside class="lg:col-span-1 hidden lg:block">
+                <div class="sticky top-24 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                    <h2 class="text-lg font-bold text-teal-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                        </svg>
+                        Contents
+                    </h2>
+                    <nav class="space-y-2" id="toc">
+                        <a href="#introduction" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Introduction</a>
+                        <a href="#information-collection" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Information We Collect</a>
+                        <a href="#how-we-use" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">How We Use Information</a>
+                        <a href="#data-sharing" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Data Sharing</a>
+                        <a href="#data-security" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Data Security</a>
+                        <a href="#your-rights" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Your Rights</a>
+                        <a href="#cookies" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Cookies & Tracking</a>
+                        <a href="#children" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Children's Privacy</a>
+                        <a href="#changes" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Policy Changes</a>
+                        <a href="#contact" class="toc-item block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-900">Contact Us</a>
+                    </nav>
                 </div>
+            </aside>
 
-                <!-- Content card -->
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-10">
-                    <div class="prose prose-lg max-w-none">
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-8">
+                <!-- Introduction -->
+                <section id="introduction" class="section-card fade-in bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl shadow-lg border-2 border-blue-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-blue-100 rounded-xl">
+                            <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-blue-900">Introduction</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>Welcome to Vortex AI. We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered e-commerce platform.</p>
+                        <p>By using our services, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.</p>
+                    </div>
+                </section>
 
-                        <!-- Introduction -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Introduction</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                Welcome to Vortex AI ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our digital marketplace platform.
-                            </p>
-                            <p class="text-gray-700 leading-relaxed">
-                                By using Vortex AI, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.
-                            </p>
-                        </section>
+                <!-- Information Collection -->
+                <section id="information-collection" class="section-card fade-in bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg border-2 border-purple-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-purple-100 rounded-xl">
+                            <svg class="w-6 h-6 text-purple-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-purple-900">Information We Collect</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <h3 class="text-xl font-semibold text-purple-800">Personal Information</h3>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li>Name, email address, and contact information</li>
+                            <li>Account credentials and authentication data</li>
+                            <li>Payment and billing information (processed securely through Stripe)</li>
+                            <li>Profile information and preferences</li>
+                        </ul>
+                        <h3 class="text-xl font-semibold text-purple-800">Usage Information</h3>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li>Browsing history and product interactions</li>
+                            <li>Search queries and AI chatbot conversations</li>
+                            <li>Device information and IP address</li>
+                            <li>Cookies and similar tracking technologies</li>
+                        </ul>
+                    </div>
+                </section>
 
-                        <!-- Information We Collect -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Information We Collect</h2>
+                <!-- How We Use Information -->
+                <section id="how-we-use" class="section-card fade-in bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg border-2 border-green-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-green-100 rounded-xl">
+                            <svg class="w-6 h-6 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-green-900">How We Use Your Information</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>We use the information we collect for the following purposes:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li><strong>Service Delivery:</strong> To provide, operate, and maintain our platform</li>
+                            <li><strong>Personalization:</strong> To deliver AI-powered recommendations and personalized content</li>
+                            <li><strong>Communication:</strong> To send transactional emails, updates, and support messages</li>
+                            <li><strong>Analytics:</strong> To understand user behavior and improve our services</li>
+                            <li><strong>Security:</strong> To detect, prevent, and address fraud and security issues</li>
+                            <li><strong>Compliance:</strong> To comply with legal obligations and enforce our terms</li>
+                        </ul>
+                    </div>
+                </section>
 
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Personal Information</h3>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                We collect personal information that you voluntarily provide to us when you:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
-                                <li>Register for an account (name, email address, username, password)</li>
-                                <li>Make a purchase or sell products (payment information, billing address)</li>
-                                <li>Upload content (books, courses, webinars, services)</li>
-                                <li>Contact us for support (email, message content)</li>
-                                <li>Complete your user profile (phone number, profile image, bio)</li>
-                            </ul>
+                <!-- Data Sharing -->
+                <section id="data-sharing" class="section-card fade-in bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl shadow-lg border-2 border-yellow-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-yellow-100 rounded-xl">
+                            <svg class="w-6 h-6 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-yellow-900">Data Sharing and Disclosure</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>We do not sell your personal information. We may share your data with:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li><strong>Service Providers:</strong> Third-party vendors who help us operate our platform (e.g., Stripe for payments, AWS for hosting)</li>
+                            <li><strong>Sellers:</strong> When you make a purchase, we share necessary information with the seller to fulfill your order</li>
+                            <li><strong>Legal Compliance:</strong> When required by law or to protect our rights and safety</li>
+                            <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>
+                        </ul>
+                    </div>
+                </section>
 
-                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Automatically Collected Information</h3>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                When you use our platform, we automatically collect certain information, including:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                <li>Device information (IP address, browser type, operating system)</li>
-                                <li>Usage data (pages visited, time spent, search queries)</li>
-                                <li>Cookies and tracking technologies</li>
-                                <li>Transaction history and purchase behavior</li>
-                            </ul>
-                        </section>
+                <!-- Data Security -->
+                <section id="data-security" class="section-card fade-in bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl shadow-lg border-2 border-red-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-red-100 rounded-xl">
+                            <svg class="w-6 h-6 text-red-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-red-900">Data Security</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>We implement industry-standard security measures to protect your information:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li>SSL/TLS encryption for data transmission</li>
+                            <li>Encrypted storage of sensitive information</li>
+                            <li>Regular security audits and vulnerability assessments</li>
+                            <li>Access controls and authentication mechanisms</li>
+                            <li>Secure payment processing through PCI-compliant Stripe</li>
+                        </ul>
+                        <p class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                            <strong>Note:</strong> While we strive to protect your data, no method of transmission over the internet is 100% secure. Please use strong passwords and keep your account credentials confidential.
+                        </p>
+                    </div>
+                </section>
 
-                        <!-- How We Use Your Information -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">How We Use Your Information</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                We use the information we collect for the following purposes:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700">
-                                <li><strong>Account Management:</strong> To create and manage your account, authenticate users, and provide customer support</li>
-                                <li><strong>Transaction Processing:</strong> To process payments, fulfill orders, and manage buyer-seller communications</li>
-                                <li><strong>Platform Improvement:</strong> To analyze usage patterns, improve our services, and develop new features</li>
-                                <li><strong>Communications:</strong> To send you order confirmations, notifications, updates, and marketing messages</li>
-                                <li><strong>Security:</strong> To detect and prevent fraud, abuse, and security incidents</li>
-                                <li><strong>Legal Compliance:</strong> To comply with legal obligations and enforce our Terms of Service</li>
-                                <li><strong>AI Features:</strong> To provide personalized recommendations and AI-powered support</li>
-                            </ul>
-                        </section>
+                <!-- Your Rights -->
+                <section id="your-rights" class="section-card fade-in bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl shadow-lg border-2 border-indigo-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-indigo-100 rounded-xl">
+                            <svg class="w-6 h-6 text-indigo-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-indigo-900">Your Privacy Rights</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>You have the following rights regarding your personal data:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li><strong>Access:</strong> Request a copy of your personal data</li>
+                            <li><strong>Correction:</strong> Update or correct inaccurate information</li>
+                            <li><strong>Deletion:</strong> Request deletion of your account and data</li>
+                            <li><strong>Portability:</strong> Receive your data in a portable format</li>
+                            <li><strong>Opt-out:</strong> Unsubscribe from marketing communications</li>
+                            <li><strong>Object:</strong> Object to certain types of data processing</li>
+                        </ul>
+                        <p>To exercise these rights, please contact us at <a href="mailto:privacy@vortexai.com" class="text-teal-900 hover:underline font-semibold">privacy@vortexai.com</a></p>
+                    </div>
+                </section>
 
-                        <!-- Information Sharing -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">How We Share Your Information</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                We may share your information in the following circumstances:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700">
-                                <li><strong>With Sellers:</strong> When you purchase products, we share necessary information with sellers to fulfill your order</li>
-                                <li><strong>Payment Processors:</strong> We use Stripe to process payments securely. Your payment information is handled according to Stripe's privacy policy</li>
-                                <li><strong>Service Providers:</strong> We work with third-party service providers for hosting, analytics, email delivery, and customer support</li>
-                                <li><strong>Legal Requirements:</strong> We may disclose information when required by law, court order, or government request</li>
-                                <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may be transferred</li>
-                                <li><strong>With Your Consent:</strong> We may share information for other purposes with your explicit consent</li>
-                            </ul>
-                        </section>
+                <!-- Cookies -->
+                <section id="cookies" class="section-card fade-in bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-lg border-2 border-amber-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-amber-100 rounded-xl">
+                            <svg class="w-6 h-6 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-amber-900">Cookies & Tracking Technologies</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>We use cookies and similar technologies to:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li>Maintain your session and keep you logged in</li>
+                            <li>Remember your preferences and settings</li>
+                            <li>Analyze site traffic and user behavior</li>
+                            <li>Deliver personalized content and recommendations</li>
+                        </ul>
+                        <p>You can control cookies through your browser settings. Note that disabling cookies may affect the functionality of our platform.</p>
+                    </div>
+                </section>
 
-                        <!-- Data Security -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Data Security</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                We implement appropriate technical and organizational security measures to protect your personal information, including:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                <li>Encryption of data in transit using SSL/TLS</li>
-                                <li>Secure password hashing and storage</li>
-                                <li>Regular security assessments and updates</li>
-                                <li>Access controls and authentication mechanisms</li>
-                                <li>Payment processing through PCI-DSS compliant providers</li>
-                            </ul>
-                            <p class="text-gray-700 leading-relaxed">
-                                However, no method of transmission over the internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.
-                            </p>
-                        </section>
+                <!-- Children's Privacy -->
+                <section id="children" class="section-card fade-in bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl shadow-lg border-2 border-pink-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-pink-100 rounded-xl">
+                            <svg class="w-6 h-6 text-pink-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-pink-900">Children's Privacy</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>Our services are not directed to individuals under the age of 13. We do not knowingly collect personal information from children under 13.</p>
+                        <p>If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately so we can delete such information.</p>
+                    </div>
+                </section>
 
-                        <!-- Your Privacy Rights -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Your Privacy Rights</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                Depending on your location, you may have the following rights:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                <li><strong>Access:</strong> Request access to the personal information we hold about you</li>
-                                <li><strong>Correction:</strong> Request correction of inaccurate or incomplete information</li>
-                                <li><strong>Deletion:</strong> Request deletion of your personal information</li>
-                                <li><strong>Portability:</strong> Request a copy of your data in a portable format</li>
-                                <li><strong>Objection:</strong> Object to processing of your personal information</li>
-                                <li><strong>Restriction:</strong> Request restriction of processing in certain circumstances</li>
-                                <li><strong>Withdraw Consent:</strong> Withdraw consent for marketing communications</li>
-                            </ul>
-                            <p class="text-gray-700 leading-relaxed">
-                                To exercise these rights, please contact us at <a href="{% url 'contact_us' %}" class="text-teal-900 hover:underline">our contact page</a> or email privacy@vortexai.com.
-                            </p>
-                        </section>
+                <!-- Policy Changes -->
+                <section id="changes" class="section-card fade-in bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl shadow-lg border-2 border-cyan-100 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-cyan-100 rounded-xl">
+                            <svg class="w-6 h-6 text-cyan-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-cyan-900">Changes to This Policy</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by:</p>
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li>Posting the new Privacy Policy on this page</li>
+                            <li>Updating the "Last updated" date at the top</li>
+                            <li>Sending you an email notification for material changes</li>
+                        </ul>
+                        <p>We encourage you to review this Privacy Policy periodically to stay informed about how we protect your information.</p>
+                    </div>
+                </section>
 
-                        <!-- Cookies and Tracking -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Cookies and Tracking Technologies</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                We use cookies and similar tracking technologies to enhance your experience on our platform. Cookies are small data files stored on your device that help us:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                <li>Remember your preferences and settings</li>
-                                <li>Keep you logged in to your account</li>
-                                <li>Analyze site traffic and usage patterns</li>
-                                <li>Provide personalized content and recommendations</li>
-                            </ul>
-                            <p class="text-gray-700 leading-relaxed">
-                                You can control cookies through your browser settings. However, disabling cookies may affect the functionality of our platform.
-                            </p>
-                        </section>
-
-                        <!-- Third-Party Services -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Third-Party Services</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                Our platform integrates with third-party services, including:
-                            </p>
-                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                <li><strong>Stripe:</strong> Payment processing and seller payouts</li>
-                                <li><strong>Analytics Providers:</strong> To understand user behavior and improve our services</li>
-                                <li><strong>AI Services:</strong> For chatbot functionality and recommendations</li>
-                            </ul>
-                            <p class="text-gray-700 leading-relaxed">
-                                These third parties have their own privacy policies. We encourage you to review them before using our platform.
-                            </p>
-                        </section>
-
-                        <!-- Data Retention -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Data Retention</h2>
-                            <p class="text-gray-700 leading-relaxed">
-                                We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required by law. When you delete your account, we will delete or anonymize your personal information, except where we need to retain it for legal or legitimate business purposes.
-                            </p>
-                        </section>
-
-                        <!-- Children's Privacy -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Children's Privacy</h2>
-                            <p class="text-gray-700 leading-relaxed">
-                                Our services are not intended for users under the age of 18. We do not knowingly collect personal information from children. If you believe we have collected information from a child, please contact us immediately, and we will take steps to delete such information.
-                            </p>
-                        </section>
-
-                        <!-- International Data Transfers -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">International Data Transfers</h2>
-                            <p class="text-gray-700 leading-relaxed">
-                                Your information may be transferred to and processed in countries other than your country of residence. These countries may have different data protection laws. We ensure appropriate safeguards are in place to protect your information in accordance with this Privacy Policy.
-                            </p>
-                        </section>
-
-                        <!-- Changes to Privacy Policy -->
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Changes to This Privacy Policy</h2>
-                            <p class="text-gray-700 leading-relaxed">
-                                We may update this Privacy Policy from time to time to reflect changes in our practices or for legal, operational, or regulatory reasons. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last updated" date. We encourage you to review this Privacy Policy periodically.
-                            </p>
-                        </section>
-
-                        <!-- Contact Us -->
-                        <section class="mb-4">
-                            <h2 class="text-2xl font-bold text-teal-900 mb-4">Contact Us</h2>
-                            <p class="text-gray-700 leading-relaxed mb-4">
-                                If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
-                            </p>
-                            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                                <p class="text-gray-700 mb-2"><strong>Email:</strong> privacy@vortexai.com</p>
-                                <p class="text-gray-700 mb-2"><strong>Contact Form:</strong> <a href="{% url 'contact_us' %}" class="text-teal-900 hover:underline">Visit our contact page</a></p>
-                                <p class="text-gray-700"><strong>Response Time:</strong> We aim to respond to all inquiries within 48 hours</p>
+                <!-- Contact -->
+                <section id="contact" class="section-card fade-in bg-gradient-to-r from-teal-50 via-cyan-50 to-blue-50 rounded-2xl shadow-xl border-2 border-teal-200 p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl">
+                            <svg class="w-6 h-6 text-teal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-teal-900">Contact Us</h2>
+                    </div>
+                    <div class="prose prose-lg max-w-none text-gray-700 space-y-4">
+                        <p>If you have any questions or concerns about this Privacy Policy, please contact us:</p>
+                        <div class="grid sm:grid-cols-2 gap-4 not-prose">
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <p class="font-semibold text-gray-900 mb-2">Email</p>
+                                <a href="mailto:privacy@vortexai.com" class="text-teal-900 hover:underline">privacy@vortexai.com</a>
                             </div>
-                        </section>
-
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <p class="font-semibold text-gray-900 mb-2">Support</p>
+                                <a href="{% url 'contact_us' %}" class="text-teal-900 hover:underline">Contact Form</a>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <!-- Footer -->
-        <footer class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white border-t border-gray-200 mt-auto">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
-                    <!-- Copyright and links -->
-                    <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
-                        <div class="text-zinc-800 text-xs font-medium font-['Urbanist'] leading-none">
-                            Copyright 2025 Vortex AI
-                        </div>
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <a href="{% url 'privacy_policy' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
-                                Privacy Policy
-                            </a>
-                            <a href="{% url 'contact_us' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
-                                Contact
-                            </a>
-                        </div>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <!-- Copyright and Links -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
+                    <div class="text-zinc-800 text-sm font-medium font-urbanist">
+                        Copyright 2025 Vortex AI
                     </div>
-
-                    <!-- Social icons -->
-                    <div class="flex items-center gap-3">
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                    <div class="flex items-center gap-4">
+                        <a href="{% url 'privacy_policy' %}" class="text-gray-600 text-sm font-normal font-urbanist hover:text-teal-900 transition-colors">
+                            Privacy Policy
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
-                        </a>
-                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-colors">
-                            <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                        <a href="{% url 'contact_us' %}" class="text-gray-600 text-sm font-normal font-urbanist hover:text-teal-900 transition-colors">
+                            Contact
                         </a>
                     </div>
                 </div>
-            </div>
-        </footer>
-    </div>
 
-    {% if user.is_authenticated %}
-    <!-- Sidebar Toggle Script -->
+                <!-- Social Icons -->
+                <div class="flex items-center gap-3">
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-110">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="hidden fixed bottom-8 right-8 p-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-full shadow-2xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 z-50">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
+    <!-- Scripts -->
     <script>
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebar = document.getElementById('sidebar');
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
 
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                sidebar.classList.toggle('-translate-x-full');
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Reading progress bar
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('reading-progress').style.width = scrolled + '%';
+        });
+
+        // Fade in on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
             });
+        }, observerOptions);
 
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth < 768 && !sidebar.contains(e.target) && e.target !== sidebarToggle) {
-                    sidebar.classList.add('-translate-x-full');
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Table of contents active highlighting
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
                 }
             });
 
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    sidebar.classList.remove('-translate-x-full');
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
                 }
             });
-        }
+        });
+
+        // Smooth scroll for TOC links
+        document.querySelectorAll('.toc-item').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const target = document.querySelector(targetId);
+                if (target) {
+                    const offset = 100;
+                    const targetPosition = target.offsetTop - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Back to top button
+        const backToTop = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.classList.remove('hidden');
+            } else {
+                backToTop.classList.add('hidden');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
     </script>
-    {% endif %}
 </body>
-
 </html>

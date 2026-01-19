@@ -407,6 +407,7 @@ def buyer_dashboard(request):
         'courses_count': courses_count,  # Total count (not limited)
         'webinars_count': webinars_count,  # Total count (not limited)
         'services_count': services_count,  # Total count (not limited)
+        'recommended_ids': recommended_ids,  # For showing "Recommended for You" badges
     }
 
     return render(request, 'src/Buyers_dashboard.html', context)
@@ -529,7 +530,7 @@ def add_new_book(request):
         return redirect('settings')
 
     if request.method == 'POST':
-        form = BookForm(request.POST, request.FILES)
+        form = BookForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             book = form.save(commit=False)
             book.seller = request.user
@@ -558,7 +559,7 @@ def add_new_book(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = BookForm()
+        form = BookForm(user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -592,7 +593,7 @@ def add_new_course(request):
         return redirect('settings')
 
     if request.method == 'POST':
-        form = CourseForm(request.POST, request.FILES)
+        form = CourseForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             course = form.save(commit=False)
             course.seller = request.user
@@ -621,7 +622,7 @@ def add_new_course(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = CourseForm()
+        form = CourseForm(user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -655,7 +656,7 @@ def add_new_webinar(request):
         return redirect('settings')
 
     if request.method == 'POST':
-        form = WebinarForm(request.POST, request.FILES)
+        form = WebinarForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             webinar = form.save(commit=False)
             webinar.seller = request.user
@@ -684,7 +685,7 @@ def add_new_webinar(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = WebinarForm()
+        form = WebinarForm(user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -718,7 +719,7 @@ def add_new_service(request):
         return redirect('settings')
 
     if request.method == 'POST':
-        form = ServiceForm(request.POST, request.FILES)
+        form = ServiceForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             service = form.save(commit=False)
             service.seller = request.user
@@ -747,7 +748,7 @@ def add_new_service(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = ServiceForm()
+        form = ServiceForm(user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -996,7 +997,7 @@ def edit_book(request, book_id):
         return redirect('seller_dashboard')
 
     if request.method == 'POST':
-        form = BookForm(request.POST, request.FILES, instance=book)
+        form = BookForm(request.POST, request.FILES, instance=book, user=request.user)
         if form.is_valid():
             book = form.save(commit=False)
             book.seller = request.user
@@ -1025,7 +1026,7 @@ def edit_book(request, book_id):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = BookForm(instance=book)
+        form = BookForm(instance=book, user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -1058,7 +1059,7 @@ def edit_course(request, course_id):
         return redirect('seller_dashboard')
 
     if request.method == 'POST':
-        form = CourseForm(request.POST, request.FILES, instance=course)
+        form = CourseForm(request.POST, request.FILES, instance=course, user=request.user)
         if form.is_valid():
             course = form.save(commit=False)
             course.seller = request.user
@@ -1087,7 +1088,7 @@ def edit_course(request, course_id):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = CourseForm(instance=course)
+        form = CourseForm(instance=course, user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -1120,7 +1121,7 @@ def edit_webinar(request, webinar_id):
         return redirect('seller_dashboard')
 
     if request.method == 'POST':
-        form = WebinarForm(request.POST, request.FILES, instance=webinar)
+        form = WebinarForm(request.POST, request.FILES, instance=webinar, user=request.user)
         if form.is_valid():
             webinar = form.save(commit=False)
             webinar.seller = request.user
@@ -1149,7 +1150,7 @@ def edit_webinar(request, webinar_id):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = WebinarForm(instance=webinar)
+        form = WebinarForm(instance=webinar, user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -1320,7 +1321,7 @@ def edit_service(request, service_id):
         return redirect('seller_dashboard')
 
     if request.method == 'POST':
-        form = ServiceForm(request.POST, request.FILES, instance=service)
+        form = ServiceForm(request.POST, request.FILES, instance=service, user=request.user)
         if form.is_valid():
             service = form.save(commit=False)
             service.seller = request.user
@@ -1349,7 +1350,7 @@ def edit_service(request, service_id):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = ServiceForm(instance=service)
+        form = ServiceForm(instance=service, user=request.user)
 
     # Get all categories for the dropdown
     categories = Category.objects.all().order_by('name')
@@ -2526,11 +2527,26 @@ def chatbot_message(request):
                 session_id = str(uuid.uuid4())
                 chat_session = None
 
+            # Retrieve conversation history for context continuity
+            conversation_history = []
+            if chat_session:
+                # Get last 10 message pairs (20 messages total) from this session
+                recent_messages = ChatMessage.objects.filter(
+                    session=chat_session
+                ).order_by('-created_at')[:10]
+
+                # Build conversation history in reverse order (oldest first)
+                for msg in reversed(recent_messages):
+                    conversation_history.append({"role": "user", "content": msg.question})
+                    conversation_history.append({"role": "assistant", "content": msg.answer})
+
+                logger.info(f"Retrieved {len(conversation_history)} messages from conversation history")
+
             # Search for relevant products using Pinecone
             context_products = search_products(user_message, n_results=5)
 
-            # Generate AI response using OpenAI (streaming)
-            stream = generate_chat_response(user_message, context_products)
+            # Generate AI response using OpenAI (streaming) with conversation memory
+            stream = generate_chat_response(user_message, context_products, conversation_history)
 
             # Collect full response from stream
             full_response = ""
@@ -2808,21 +2824,30 @@ def seller_messages_redirect(request):
         messages.error(request, 'This page is only accessible to sellers.')
         return redirect('buyer_dashboard')
 
-    # Get the most recent chat
+    # Get the most recent chat with valid buyer and service
     recent_chat = ServiceChat.objects.filter(
-        seller=request.user
+        seller=request.user,
+        buyer__isnull=False,
+        service__isnull=False,
+        service__is_active=True
     ).select_related('buyer', 'service').order_by('-updated_at').first()
 
     if recent_chat:
-        # Redirect to the most recent chat with buyer_id parameter
-        from django.http import HttpResponseRedirect
-        from django.urls import reverse
-        url = reverse('service_chat', kwargs={'service_id': recent_chat.service.id})
-        return HttpResponseRedirect(f'{url}?buyer_id={recent_chat.buyer.id}')
-    else:
-        # No chats yet
-        messages.info(request, 'No customer messages yet. Chats will appear here when customers contact you.')
-        return redirect('seller_dashboard')
+        try:
+            # Verify buyer still exists and is active
+            if recent_chat.buyer and recent_chat.service:
+                # Redirect to the most recent chat with buyer_id parameter
+                from django.http import HttpResponseRedirect
+                from django.urls import reverse
+                url = reverse('service_chat', kwargs={'service_id': recent_chat.service.id})
+                return HttpResponseRedirect(f'{url}?buyer_id={recent_chat.buyer.id}')
+        except Exception as e:
+            logger.error(f"Error redirecting to chat: {e}")
+            # If there's an error with the recent chat, fall through to no chats message
+
+    # No valid chats yet
+    messages.info(request, 'No customer messages yet. Chats will appear here when customers contact you.')
+    return redirect('seller_dashboard')
 
 
 @login_required
@@ -2864,7 +2889,12 @@ def service_chat_window(request, service_id):
             messages.error(request, 'Buyer information is required.')
             return redirect('seller_dashboard')
 
-        buyer = get_object_or_404(User, id=buyer_id, user_type='buyer')
+        try:
+            buyer = User.objects.get(id=buyer_id, user_type='buyer')
+        except User.DoesNotExist:
+            messages.error(request, 'This buyer no longer exists or is not accessible.')
+            return redirect('seller_dashboard')
+
         other_user = buyer
 
         # Verify buyer purchased this service
@@ -2940,40 +2970,56 @@ def send_service_message(request, chat_id):
     API endpoint to send a message in a service chat.
     POST only. Returns JSON response.
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
-    chat = get_object_or_404(ServiceChat, id=chat_id)
-    user = request.user
+        # Get chat object
+        try:
+            chat = ServiceChat.objects.get(id=chat_id)
+        except ServiceChat.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
 
-    # Verify user is part of this chat
-    if user != chat.buyer and user != chat.seller:
-        return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
+        user = request.user
 
-    # Get message content
-    message_text = request.POST.get('message', '').strip()
-    if not message_text:
-        return JsonResponse({'success': False, 'error': 'Message cannot be empty'}, status=400)
+        # Verify user is part of this chat
+        if user != chat.buyer and user != chat.seller:
+            return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
 
-    # Create message
-    message = ServiceChatMessage.objects.create(
-        chat=chat,
-        sender=user,
-        message=message_text,
-        is_read=False
-    )
+        # Get message content
+        message_text = request.POST.get('message', '').strip()
+        if not message_text:
+            return JsonResponse({'success': False, 'error': 'Message cannot be empty'}, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'message': {
-            'id': message.id,
-            'sender_name': message.sender.full_name,
-            'sender_id': message.sender.id,
-            'message': message.message,
-            'created_at': message.created_at.strftime('%I:%M %p'),
-            'is_current_user': message.sender == user
-        }
-    })
+        # Validate message length
+        if len(message_text) > 5000:
+            return JsonResponse({'success': False, 'error': 'Message is too long (max 5000 characters)'}, status=400)
+
+        # Create message
+        message = ServiceChatMessage.objects.create(
+            chat=chat,
+            sender=user,
+            message=message_text,
+            is_read=False
+        )
+
+        # Return success response with message data
+        return JsonResponse({
+            'success': True,
+            'message': {
+                'id': message.id,
+                'sender_name': message.sender.full_name,
+                'sender_id': message.sender.id,
+                'message': message.message,
+                'created_at': message.created_at.strftime('%I:%M %p'),
+                'is_current_user': message.sender == user
+            }
+        }, status=200)
+
+    except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Error sending service message: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': 'An error occurred while sending the message'}, status=500)
 
 
 @login_required
@@ -2982,41 +3028,52 @@ def get_service_messages(request, chat_id):
     API endpoint to fetch all messages in a service chat.
     GET only. Returns JSON response.
     """
-    if request.method != 'GET':
-        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        if request.method != 'GET':
+            return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
-    chat = get_object_or_404(ServiceChat, id=chat_id)
-    user = request.user
+        # Get chat object
+        try:
+            chat = ServiceChat.objects.get(id=chat_id)
+        except ServiceChat.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Chat not found'}, status=404)
 
-    # Verify user is part of this chat
-    if user != chat.buyer and user != chat.seller:
-        return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
+        user = request.user
 
-    # Mark messages from other user as read
-    other_user = chat.seller if user == chat.buyer else chat.buyer
-    ServiceChatMessage.objects.filter(
-        chat=chat,
-        sender=other_user,
-        is_read=False
-    ).update(is_read=True)
+        # Verify user is part of this chat
+        if user != chat.buyer and user != chat.seller:
+            return JsonResponse({'success': False, 'error': 'Access denied'}, status=403)
 
-    # Get all messages
-    messages_list = chat.messages.select_related('sender').all()
+        # Mark messages from other user as read
+        other_user = chat.seller if user == chat.buyer else chat.buyer
+        ServiceChatMessage.objects.filter(
+            chat=chat,
+            sender=other_user,
+            is_read=False
+        ).update(is_read=True)
 
-    messages_data = [{
-        'id': msg.id,
-        'sender_name': msg.sender.full_name,
-        'sender_id': msg.sender.id,
-        'message': msg.message,
-        'created_at': msg.created_at.strftime('%I:%M %p'),
-        'is_current_user': msg.sender == user
-    } for msg in messages_list]
+        # Get all messages
+        messages_list = chat.messages.select_related('sender').all()
 
-    return JsonResponse({
-        'success': True,
-        'messages': messages_data,
-        'unread_count': 0  # All marked as read
-    })
+        messages_data = [{
+            'id': msg.id,
+            'sender_name': msg.sender.full_name,
+            'sender_id': msg.sender.id,
+            'message': msg.message,
+            'created_at': msg.created_at.strftime('%I:%M %p'),
+            'is_current_user': msg.sender == user
+        } for msg in messages_list]
+
+        return JsonResponse({
+            'success': True,
+            'messages': messages_data,
+            'unread_count': 0  # All marked as read
+        }, status=200)
+
+    except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Error fetching service messages: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': 'An error occurred while fetching messages'}, status=500)
 
 
 # ==============================================================================
@@ -3041,10 +3098,8 @@ def registration_payment(request):
     """
     # Check if already paid for current role
     if request.user.user_type == 'buyer' and request.user.buyer_access_paid:
-        messages.success(request, 'Your buyer account is already active!')
         return redirect('buyer_dashboard')
     elif request.user.user_type == 'seller' and request.user.seller_access_paid:
-        messages.success(request, 'Your seller account is already active!')
         return redirect('seller_dashboard')
 
     # Determine amount based on user type
@@ -3276,15 +3331,12 @@ def role_upgrade_payment(request, role):
     """
     # Validate role parameter
     if role not in ['buyer', 'seller']:
-        messages.error(request, 'Invalid role specified.')
         return redirect('buyer_dashboard' if request.user.buyer_access_paid else 'seller_dashboard')
 
     # Check if already paid for this role
     if role == 'buyer' and request.user.buyer_access_paid:
-        messages.success(request, 'You already have buyer access!')
         return redirect('buyer_dashboard')
     elif role == 'seller' and request.user.seller_access_paid:
-        messages.success(request, 'You already have seller access!')
         return redirect('seller_dashboard')
 
     # Determine amount based on role
@@ -3595,6 +3647,18 @@ def contact_us(request):
         # Check if AJAX request
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
+        # Get client IP address
+        def get_client_ip(request):
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            return ip
+
+        client_ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
         # Validate form data
         if not all([name, email, subject, message]):
             if is_ajax:
@@ -3622,7 +3686,45 @@ def contact_us(request):
             context = get_contact_context(request)
             return render(request, 'src/contact_us.html', context)
 
+        # Rate limiting - Check recent submissions
+        from .models import ContactMessage
+
+        # Check IP-based rate limiting (max 3 per hour)
+        recent_by_ip = ContactMessage.get_recent_by_ip(client_ip, hours=1)
+        if recent_by_ip.count() >= 3:
+            error_msg = 'Too many submissions. Please wait an hour before submitting again.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': error_msg})
+            messages.error(request, error_msg)
+            context = get_contact_context(request)
+            return render(request, 'src/contact_us.html', context)
+
+        # Check email-based rate limiting (max 3 per hour)
+        recent_by_email = ContactMessage.get_recent_by_email(email, hours=1)
+        if recent_by_email.count() >= 3:
+            error_msg = 'Too many submissions from this email. Please wait an hour before submitting again.'
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': error_msg})
+            messages.error(request, error_msg)
+            context = get_contact_context(request)
+            return render(request, 'src/contact_us.html', context)
+
+        # Save to database first (before email to ensure we don't lose data)
+        contact_message = ContactMessage.objects.create(
+            name=name,
+            email=email,
+            subject=subject,
+            message=message,
+            user=request.user if request.user.is_authenticated else None,
+            ip_address=client_ip,
+            user_agent=user_agent[:500],  # Limit user agent length
+            status='new'
+        )
+
+        logger.info(f"Contact form submission saved to database: ID {contact_message.id} from {name} ({email})")
+
         # Send email
+        email_sent = False
         try:
             from django.core.mail import send_mail
             from django.conf import settings
@@ -3640,6 +3742,10 @@ Message:
 {message}
 
 ---
+Submission ID: {contact_message.id}
+IP Address: {client_ip}
+Submitted: {contact_message.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+
 This message was sent from the Vortex AI contact form.
             """
 
@@ -3661,6 +3767,8 @@ Thank you for contacting Vortex AI! We have received your message and will respo
 Your message:
 {message}
 
+Reference ID: {contact_message.id}
+
 If you have any urgent concerns, please don't hesitate to reach out to us directly at support@vortexai.com.
 
 Best regards,
@@ -3678,29 +3786,28 @@ This is an automated confirmation email. Please do not reply to this message.
                 fail_silently=True,  # Don't fail if confirmation email doesn't send
             )
 
-            logger.info(f"Contact form submission from {name} ({email}): {subject}")
-
-            if is_ajax:
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Thank you for contacting us! We will respond to your inquiry within 24-48 hours.'
-                })
-
-            messages.success(request, 'Thank you for contacting us! We will respond to your inquiry within 24-48 hours.')
-            return redirect('contact_us')
+            email_sent = True
+            logger.info(f"Contact form emails sent successfully for submission ID {contact_message.id}")
 
         except Exception as e:
-            logger.error(f"Error sending contact form email: {str(e)}")
+            logger.error(f"Error sending contact form email for submission ID {contact_message.id}: {str(e)}")
+            # Continue even if email fails - message is saved to database
 
-            if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'There was an error sending your message. Please try again or email us directly at support@vortexai.com.'
-                })
+        # Update email_sent status
+        contact_message.email_sent = email_sent
+        contact_message.save(update_fields=['email_sent'])
 
-            messages.error(request, 'There was an error sending your message. Please try again or email us directly at support@vortexai.com.')
-            context = get_contact_context(request)
-            return render(request, 'src/contact_us.html', context)
+        # Return success response (even if email failed, because message is saved)
+        success_message = 'Thank you for contacting us! We will respond to your inquiry within 24-48 hours.'
+
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': success_message
+            })
+
+        messages.success(request, success_message)
+        return redirect('contact_us')
 
     context = get_contact_context(request)
     return render(request, 'src/contact_us.html', context)
@@ -3728,6 +3835,71 @@ def get_contact_context(request):
     return context
 
 
+@login_required
+def get_subcategories(request, main_category_id):
+    """
+    Get list of subcategories for a given main category - AJAX endpoint
+    """
+    if request.method != 'GET':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+    try:
+        # Get the main category
+        main_category = get_object_or_404(Category, id=main_category_id, is_main_category=True, is_active=True)
+
+        # Get all active subcategories
+        subcategories = Category.objects.filter(
+            parent=main_category,
+            is_active=True,
+            is_approved=True
+        ).values('id', 'name').order_by('name')
+
+        return JsonResponse({
+            'success': True,
+            'subcategories': list(subcategories)
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching subcategories: {str(e)}")
+        return JsonResponse({'success': False, 'message': 'Failed to load subcategories'})
+
+
+@login_required
+def validate_subcategory(request):
+    """
+    Validate if a subcategory name already exists under a main category - AJAX endpoint
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+    try:
+        data = json.loads(request.body)
+        main_category_id = data.get('main_category_id')
+        subcategory_name = data.get('subcategory_name', '').strip().title()
+
+        if not main_category_id or not subcategory_name:
+            return JsonResponse({'success': False, 'message': 'Missing required fields'})
+
+        # Get the main category
+        main_category = get_object_or_404(Category, id=main_category_id, is_main_category=True, is_active=True)
+
+        # Check if subcategory exists (case-insensitive)
+        exists = Category.objects.filter(
+            parent=main_category,
+            name__iexact=subcategory_name
+        ).exists()
+
+        return JsonResponse({
+            'success': True,
+            'exists': exists,
+            'message': 'Subcategory already exists' if exists else 'New subcategory will be created'
+        })
+
+    except Exception as e:
+        logger.error(f"Error validating subcategory: {str(e)}")
+        return JsonResponse({'success': False, 'message': 'Failed to validate subcategory'})
+
+
 def privacy_policy(request):
     """Display privacy policy page"""
     context = {}
@@ -3748,3 +3920,25 @@ def privacy_policy(request):
             context['switch_text'] = 'Switch to Buyer'
 
     return render(request, 'src/privacy_policy.html', context)
+
+
+def terms_of_service(request):
+    """Display terms of service page"""
+    context = {}
+
+    # Add sidebar context if user is authenticated
+    if request.user.is_authenticated:
+        if request.user.user_type == 'buyer':
+            context['dashboard_url'] = 'buyer_dashboard'
+            context['orders_label'] = 'My Orders'
+            context['switch_gradient'] = 'from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
+            context['switch_icon'] = '🏪'
+            context['switch_text'] = 'Switch to Seller'
+        else:  # seller
+            context['dashboard_url'] = 'seller_dashboard'
+            context['orders_label'] = 'Sales'
+            context['switch_gradient'] = 'from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600'
+            context['switch_icon'] = '🛍️'
+            context['switch_text'] = 'Switch to Buyer'
+
+    return render(request, 'src/terms_of_service.html', context)
