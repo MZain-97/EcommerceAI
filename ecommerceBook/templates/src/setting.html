@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Settings Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="{% static 'style/output.css' %}" rel="stylesheet">
@@ -19,9 +19,9 @@
 
       <!-- Dynamic Sidebar -->
       {% if user.user_type == 'seller' %}
-          {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='settings' %}
+          {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=False switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='settings' %}
       {% else %}
-          {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='settings' %}
+          {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=False switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='settings' %}
       {% endif %}
 
       <!-- Mobile Header -->

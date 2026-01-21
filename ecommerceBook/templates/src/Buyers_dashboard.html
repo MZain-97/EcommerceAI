@@ -22,7 +22,58 @@
     </script>
     <link href="{% static 'style/output.css' %}" rel="stylesheet">
     <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <title>Buyers Dashboard</title>
+    <style>
+        /* Chatbot clickable links styling */
+        .ai-response a,
+        .ai-response .chatbot-product-link {
+            color: #0d9488;
+            text-decoration: underline;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .ai-response a:hover,
+        .ai-response .chatbot-product-link:hover {
+            color: #0f766e;
+            text-decoration: underline;
+            font-weight: 600;
+            text-shadow: 0 0 1px rgba(13, 148, 136, 0.3);
+        }
+
+        /* Add external link icon for product links */
+        .ai-response .chatbot-product-link::after {
+            content: " ↗";
+            font-size: 0.75em;
+            opacity: 0.6;
+            margin-left: 2px;
+            transition: opacity 0.2s;
+        }
+
+        .ai-response .chatbot-product-link:hover::after {
+            opacity: 1;
+        }
+
+        /* Dropdown animation */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #dropdownMenu:not(.hidden) {
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+    </style>
 </head>
 
 <body class="font-urbanist bg-zinc-50">
@@ -165,17 +216,90 @@
 
                     <!-- Dropdown menu -->
                     <div id="dropdownMenu"
-                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 "
+                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-lg shadow-2xl bg-white border-2 border-gray-200 z-50"
                         role="menu" aria-orientation="vertical" aria-labelledby="categoryDropdown">
-                        <div class="py-1" role="none">
-                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                        <div class="py-2" role="none">
+                            <a href="#" class="text-gray-800 font-semibold block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200 rounded-md mx-2"
                                 role="menuitem">All Categories</a>
+                            <div class="border-t border-gray-200 my-2"></div>
                             {% for category in categories %}
-                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
-                                role="menuitem">{{ category.name }}</a>
+                            <a href="#" class="text-gray-700 block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200 rounded-md mx-2"
+                                role="menuitem">{{ category }}</a>
                             {% empty %}
                             <span class="text-gray-500 block px-4 py-2 text-sm italic">No categories available</span>
                             {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendation Banner -->
+                <div class="w-full px-1 sm:px-1 lg:px-1 max-w-8xl mx-auto mb-8">
+                    <div class="bg-gradient-to-r from-teal-50 via-blue-50 to-purple-50 border-2 border-teal-200 rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                        <!-- Decorative Background Elements -->
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-teal-100 rounded-full opacity-20 blur-3xl -mt-32 -mr-32"></div>
+                        <div class="absolute bottom-0 left-0 w-48 h-48 bg-purple-100 rounded-full opacity-20 blur-3xl -mb-24 -ml-24"></div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-start gap-4">
+                                <!-- AI Icon -->
+                                <div class="flex-shrink-0">
+                                    <div class="w-14 h-14 bg-gradient-to-br from-teal-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h3 class="text-xl font-bold text-gray-900">AI-Powered Personalized Recommendations</h3>
+                                        <span class="px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full shadow animate-bounce">
+                                            NEW
+                                        </span>
+                                    </div>
+                                    <p class="text-gray-700 text-sm leading-relaxed mb-4">
+                                        We're learning your preferences! Products marked with
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded mx-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                            For You
+                                        </span>
+                                        are specially selected based on your browsing history, searches, and interests.
+                                    </p>
+
+                                    <!-- Features List -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-white/80 rounded-lg px-3 py-2">
+                                            <svg class="w-4 h-4 text-teal-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Based on browsing history</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-white/80 rounded-lg px-3 py-2">
+                                            <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Learns from your searches</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-white/80 rounded-lg px-3 py-2">
+                                            <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                                            </svg>
+                                            <span>Improves with purchases</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Close Button (Optional) -->
+                                <button onclick="this.parentElement.parentElement.parentElement.style.display='none'" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -192,17 +316,31 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                     {% for service in services %}
                     <!-- Service Card -->
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                        <a href="{% url 'product_detail' 'service' service.id %}" class="block w-full h-48 overflow-hidden">
+                    <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative group" data-category="{{ service.category }}" data-type="service">
+                        <!-- Recommended Badge (shows on first 3 services) -->
+                        {% if forloop.counter <= 3 %}
+                            <div class="absolute top-0 left-0 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-white text-xs font-bold rounded-br-lg rounded-tl-lg shadow-lg animate-pulse">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span>For You</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <a href="{% url 'product_detail' 'service' service.id %}" class="block w-full h-48 overflow-hidden relative">
                             {% if service.service_image %}
-                                <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover">
+                                <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                             {% else %}
-                                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-teal-50 group-hover:to-teal-100 transition-colors duration-300">
+                                    <svg class="w-16 h-16 text-gray-400 group-hover:text-teal-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                     </svg>
                                 </div>
                             {% endif %}
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
                         </a>
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ service.title }}</h3>
@@ -238,16 +376,16 @@
                                 {% if service.id in purchased_service_ids %}
                                     <!-- Chat button for purchased services -->
                                     <a href="{% url 'service_chat' service.id %}"
-                                        class="flex-1 py-2 text-sm bg-teal-900 text-white rounded hover:bg-teal-800 transition-colors text-center font-medium">
+                                        class="flex-1 py-2 text-sm bg-teal-900 text-white rounded hover:bg-teal-800 transition-all duration-300 transform hover:scale-105 hover:shadow-md text-center font-medium">
                                         Chat with Seller
                                     </a>
                                 {% else %}
                                     <!-- View Detail and Add to Cart for unpurchased services -->
                                     <a href="{% url 'product_detail' 'service' service.id %}"
-                                        class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                        class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                         View Detail
                                     </a>
-                                    <button onclick="addToCart('service', {{ service.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="service" data-product-id="{{ service.id }}">
+                                    <button onclick="addToCart('service', {{ service.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 add-to-cart-btn" data-product-type="service" data-product-id="{{ service.id }}">
                                         <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -282,18 +420,32 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for book in books %}
-                    <!-- Product Card 1 -->
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                        <a href="{% url 'product_detail' 'book' book.id %}" class="block w-full h-48 overflow-hidden">
+                    <!-- Product Card -->
+                    <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative group" data-product-id="book_{{ book.id }}" data-category="{{ book.category }}" data-type="book">
+                        <!-- Recommended Badge (shows on first 3 products as they are personalized) -->
+                        {% if forloop.counter <= 3 %}
+                            <div class="absolute top-0 left-0 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-white text-xs font-bold rounded-br-lg rounded-tl-lg shadow-lg animate-pulse">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span>For You</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <a href="{% url 'product_detail' 'book' book.id %}" class="block w-full h-48 overflow-hidden relative">
                             {% if book.book_image %}
-                                    <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                                    <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 {% else %}
-                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-teal-50 group-hover:to-teal-100 transition-colors duration-300">
+                                        <svg class="w-16 h-16 text-gray-400 group-hover:text-teal-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                         </svg>
                                     </div>
                                 {% endif %}
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
                         </a>
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ book.title }}</h3>
@@ -327,10 +479,10 @@
                             </div>
                             <div class="flex space-x-2">
                                 <a href="{% url 'product_detail' 'book' book.id %}"
-                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                     View Detail
                                 </a>
-                                <button onclick="addToCart('book', {{ book.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="book" data-product-id="{{ book.id }}">
+                                <button onclick="addToCart('book', {{ book.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 add-to-cart-btn" data-product-type="book" data-product-id="{{ book.id }}">
                                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -363,18 +515,32 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for course in courses %}
-                    <!-- Product Card 1 -->
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                        <a href="{% url 'product_detail' 'course' course.id %}" class="block w-full h-48 overflow-hidden">
+                    <!-- Course Card -->
+                    <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative group" data-category="{{ course.category }}" data-type="course">
+                        <!-- Recommended Badge (shows on first 3 courses) -->
+                        {% if forloop.counter <= 3 %}
+                            <div class="absolute top-0 left-0 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-white text-xs font-bold rounded-br-lg rounded-tl-lg shadow-lg animate-pulse">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span>For You</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <a href="{% url 'product_detail' 'course' course.id %}" class="block w-full h-48 overflow-hidden relative">
                             {% if course.course_image %}
-                                    <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                                    <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 {% else %}
-                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-teal-50 group-hover:to-teal-100 transition-colors duration-300">
+                                        <svg class="w-16 h-16 text-gray-400 group-hover:text-teal-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
                                 {% endif %}
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
                         </a>
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
@@ -408,10 +574,10 @@
                             </div>
                             <div class="flex space-x-2">
                                 <a href="{% url 'product_detail' 'course' course.id %}"
-                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                     View Detail
                                 </a>
-                                <button onclick="addToCart('course', {{ course.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="course" data-product-id="{{ course.id }}">
+                                <button onclick="addToCart('course', {{ course.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 add-to-cart-btn" data-product-type="course" data-product-id="{{ course.id }}">
                                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -444,18 +610,32 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for webinar in webinars %}
-                    <!-- Product Card 1 -->
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                        <a href="{% url 'product_detail' 'webinar' webinar.id %}" class="block w-full h-48 overflow-hidden">
+                    <!-- Webinar Card -->
+                    <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative group" data-category="{{ webinar.category }}" data-type="webinar">
+                        <!-- Recommended Badge (shows on first 3 webinars) -->
+                        {% if forloop.counter <= 3 %}
+                            <div class="absolute top-0 left-0 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-white text-xs font-bold rounded-br-lg rounded-tl-lg shadow-lg animate-pulse">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    <span>For You</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <a href="{% url 'product_detail' 'webinar' webinar.id %}" class="block w-full h-48 overflow-hidden relative">
                             {% if webinar.webinar_image %}
-                                                    <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
+                                                    <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                                 {% else %}
-                                                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                                                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:from-teal-50 group-hover:to-teal-100 transition-colors duration-300">
+                                                        <svg class="w-16 h-16 text-gray-400 group-hover:text-teal-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                                         </svg>
                                                     </div>
                                                 {% endif %}
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
                         </a>
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ webinar.title }}</h3>
@@ -489,10 +669,10 @@
                             </div>
                             <div class="flex space-x-2">
                                 <a href="{% url 'product_detail' 'webinar' webinar.id %}"
-                                    class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                     View Detail
                                 </a>
-                                <button onclick="addToCart('webinar', {{ webinar.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors add-to-cart-btn" data-product-type="webinar" data-product-id="{{ webinar.id }}">
+                                <button onclick="addToCart('webinar', {{ webinar.id }})" class="p-2 border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 add-to-cart-btn" data-product-type="webinar" data-product-id="{{ webinar.id }}">
                                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -567,20 +747,41 @@
             }
         });
 
-        // Close dropdown when clicking on a menu item
+        // Close dropdown when clicking on a menu item and filter products
         const menuItems = dropdownMenu.querySelectorAll('a');
         menuItems.forEach(item => {
-            item.addEventListener('click', function () {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
                 dropdownButton.setAttribute('aria-expanded', 'false');
                 dropdownMenu.classList.add('hidden');
-                // Update button text to show selected category
-                const buttonText = this.textContent;
+
+                // Get selected category
+                const selectedCategory = this.textContent.trim();
                 const buttonSpan = dropdownButton.querySelector('span');
-                if (buttonText !== 'All Categories') {
-                    buttonSpan.textContent = buttonText;
+
+                // Update button text
+                if (selectedCategory !== 'All Categories') {
+                    buttonSpan.textContent = selectedCategory;
                 } else {
                     buttonSpan.textContent = 'Category';
                 }
+
+                // Filter products by category
+                const allProducts = document.querySelectorAll('.product-card');
+                allProducts.forEach(product => {
+                    const productCategory = product.getAttribute('data-category');
+
+                    if (selectedCategory === 'All Categories') {
+                        // Show all products
+                        product.style.display = '';
+                    } else if (productCategory === selectedCategory) {
+                        // Show matching products
+                        product.style.display = '';
+                    } else {
+                        // Hide non-matching products
+                        product.style.display = 'none';
+                    }
+                });
             });
         });
     </script>
@@ -999,21 +1200,10 @@
                 const data = await response.json();
 
                 if (data.success && data.response) {
-                    // Simulate typing effect
-                    aiTextElement.textContent = '';
-                    let index = 0;
-                    const text = data.response;
-                    const typeSpeed = 20; // milliseconds per character
-
-                    function typeChar() {
-                        if (index < text.length) {
-                            aiTextElement.textContent += text.charAt(index);
-                            index++;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                            setTimeout(typeChar, typeSpeed);
-                        }
-                    }
-                    typeChar();
+                    // Process markdown and render with clickable links
+                    const htmlContent = processMarkdown(data.response);
+                    aiTextElement.innerHTML = htmlContent;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 } else {
                     const errorMsg = data.message || data.error || 'An error occurred';
                     console.error('Backend error:', errorMsg);
@@ -1062,7 +1252,7 @@
                     <i class="fa-solid fa-robot text-white text-sm"></i>
                 </div>
                 <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
-                    <p class="text-sm text-gray-800 ai-text"></p>
+                    <div class="text-sm text-gray-800 ai-text ai-response"></div>
                 </div>
             `;
             chatMessages.appendChild(messageDiv);
@@ -1074,6 +1264,37 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Configure marked.js for clickable links
+        if (typeof marked !== 'undefined') {
+            marked.use({
+                breaks: true,
+                gfm: true,
+                renderer: {
+                    link(token) {
+                        const href = token.href;
+                        const text = token.text;
+                        const title = token.title;
+                        const titleAttr = title ? ` title="${title}"` : '';
+                        return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer" class="chatbot-product-link">${text}</a>`;
+                    }
+                }
+            });
+            console.log('[Chatbot Widget] Marked.js configured with clickable links');
+        }
+
+        // Function to process markdown
+        function processMarkdown(text) {
+            if (typeof marked === 'undefined') {
+                return text.replace(/\n/g, '<br>');
+            }
+            try {
+                return marked.parse(text);
+            } catch (error) {
+                console.error('[Chatbot Widget] Markdown processing error:', error);
+                return text.replace(/\n/g, '<br>');
+            }
         }
     </script>
 </body>

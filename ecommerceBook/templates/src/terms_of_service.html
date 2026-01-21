@@ -1,0 +1,603 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="{% static 'style/output.css' %}" rel="stylesheet">
+    <link href="{% static 'style/custom.css' %}" rel="stylesheet">
+    <title>Terms of Service - Vortex AI</title>
+
+    <style>
+        /* Smooth scroll animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-hover {
+            transition: all 0.3s ease;
+        }
+
+        .section-hover:hover {
+            transform: translateX(8px);
+            box-shadow: 0 10px 30px rgba(13, 148, 136, 0.15);
+        }
+
+        .icon-bounce {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .highlight-hover {
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .highlight-hover::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(to right, #0d9488, #14b8a6);
+            transition: width 0.3s ease;
+        }
+
+        .highlight-hover:hover::after {
+            width: 100%;
+        }
+
+        .highlight-hover:hover {
+            color: #0d9488;
+        }
+    </style>
+</head>
+
+<body class="font-urbanist bg-stone-50">
+    <!-- Main container -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header with animation -->
+        <header class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white shadow-sm sticky top-0 z-40 backdrop-blur-sm bg-white/90 transition-all duration-300">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <!-- Back Button & Logo with hover animation -->
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <button onclick="window.history.back()" class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span class="text-sm font-medium">Back</span>
+                    </button>
+                    <div class="flex items-center gap-2 sm:gap-3 group">
+                        <img src="{% static 'assets/Buyer_Dashboard_images/Logo (1).svg' %}" alt="Logo" class="w-10 h-10 sm:w-12 sm:h-12 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110">
+                        <div class="text-teal-900 text-lg sm:text-xl lg:text-2xl font-bold font-['Inter'] uppercase hidden sm:block gradient-text">
+                            VORTEX AI
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth buttons (only show if not logged in) -->
+                {% if not user.is_authenticated %}
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <a href="{% url 'login' %}" class="px-4 sm:px-8 py-2.5 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-teal-900 bg-white text-teal-900 text-sm font-normal font-['Poppins'] hover:bg-teal-900 hover:text-white hover:shadow-md transition-all duration-300 transform hover:scale-105">
+                        Login
+                    </a>
+                    <a href="{% url 'register' %}" class="px-4 sm:px-8 py-2.5 bg-teal-900 rounded-lg shadow-[0px_2px_4px_0px_rgba(0,0,0,0.10)] text-white text-sm font-normal font-['Poppins'] hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 hover:shadow-md transition-all duration-300 transform hover:scale-105">
+                        Sign up
+                    </a>
+                </div>
+                {% else %}
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600 animate-on-scroll">Welcome, {{ user.username }}</span>
+                    <a href="{% if user.user_type == 'buyer' %}{% url 'buyer_dashboard' %}{% else %}{% url 'seller_dashboard' %}{% endif %}" class="px-4 py-2 bg-teal-900 text-white rounded-lg text-sm hover:bg-white hover:text-teal-900 hover:outline hover:outline-1 hover:outline-teal-900 transition-all duration-300 transform hover:scale-105">
+                        Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+            <div class="max-w-5xl mx-auto">
+                <!-- Page Title with animation -->
+                <div class="mb-8 animate-on-scroll">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl flex items-center justify-center shadow-lg floating">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-4xl font-bold text-teal-900 mb-2">Terms of Service</h1>
+                            <p class="text-gray-600 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Last updated: January 14, 2026
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content card with hover animation -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-10 section-hover animate-on-scroll">
+                    <div class="prose prose-lg max-w-none">
+
+                        <!-- Introduction -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Introduction</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                Welcome to <span class="highlight-hover font-semibold">Vortex AI</span> ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of our digital marketplace platform, including our website, services, and applications (collectively, the "Platform").
+                            </p>
+                            <p class="text-gray-700 leading-relaxed">
+                                By accessing or using the Platform, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use our Platform.
+                            </p>
+                        </section>
+
+                        <!-- Acceptance of Terms -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Acceptance of Terms</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                By creating an account, making a purchase, or using any part of our Platform, you acknowledge that you have read, understood, and agree to be bound by these Terms, as well as our <a href="{% url 'privacy_policy' %}" class="text-teal-600 hover:text-teal-800 underline transition-colors">Privacy Policy</a>.
+                            </p>
+                            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-4 rounded-r-lg">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-amber-700">
+                                            <strong>Important:</strong> You must be at least 18 years old to use this Platform.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Account Registration -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Account Registration</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                To use certain features of the Platform, you must register for an account. You agree to:
+                            </p>
+                            <ul class="list-none space-y-3 text-gray-700">
+                                <li class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>Provide accurate, current, and complete information during registration</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>Maintain and update your information to keep it accurate and current</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>Maintain the security and confidentiality of your password</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>Notify us immediately of any unauthorized access to your account</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <svg class="w-6 h-6 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>Be responsible for all activities that occur under your account</span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <!-- User Roles -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">User Roles</h2>
+                            </div>
+
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Buyers</h3>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                As a buyer, you can browse, search, and purchase digital products (books, courses, webinars, and services) on our Platform. Buyers must:
+                            </p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
+                                <li>Provide valid payment information for purchases</li>
+                                <li>Use purchased content only for personal, non-commercial purposes unless otherwise specified</li>
+                                <li>Not redistribute, resell, or share purchased digital products</li>
+                                <li>Communicate respectfully with sellers</li>
+                            </ul>
+
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3">Sellers</h3>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                As a seller, you can list and sell digital products on our Platform. Sellers must:
+                            </p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                                <li>Own or have rights to all content you upload and sell</li>
+                                <li>Provide accurate descriptions and pricing for your products</li>
+                                <li>Deliver purchased products to buyers promptly</li>
+                                <li>Comply with all applicable laws and regulations</li>
+                                <li>Pay applicable fees and commissions as outlined in our pricing structure</li>
+                                <li>Maintain a valid Stripe Connect account for receiving payments</li>
+                            </ul>
+                        </section>
+
+                        <!-- Payments and Fees -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Payments and Fees</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                All payments on the Platform are processed securely through Stripe. By making a purchase or selling products, you agree to Stripe's terms and conditions.
+                            </p>
+                            <div class="bg-teal-50 border-l-4 border-teal-400 p-4 my-4 rounded-r-lg">
+                                <h4 class="font-semibold text-teal-900 mb-2">Platform Fees:</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-700 ml-4">
+                                    <li>Buyers: No additional fees beyond the listed product price</li>
+                                    <li>Sellers: Platform commission applies to each sale (see pricing page)</li>
+                                    <li>Payment processing fees are handled by Stripe</li>
+                                </ul>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">
+                                All prices are in USD unless otherwise stated. Taxes may apply based on your location.
+                            </p>
+                        </section>
+
+                        <!-- Refunds and Returns -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Refunds and Returns</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                Due to the digital nature of our products, all sales are final once the download or access is provided. However, we may issue refunds in the following circumstances:
+                            </p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                                <li>The product is significantly different from its description</li>
+                                <li>The product is defective or cannot be accessed</li>
+                                <li>Duplicate charges occurred</li>
+                                <li>Unauthorized charges on your account</li>
+                            </ul>
+                            <p class="text-gray-700 leading-relaxed mt-4">
+                                Refund requests must be submitted within 7 days of purchase through our <a href="{% url 'contact_us' %}" class="text-teal-600 hover:text-teal-800 underline transition-colors">contact page</a>.
+                            </p>
+                        </section>
+
+                        <!-- Intellectual Property -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Intellectual Property</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                All content on the Platform, including but not limited to text, graphics, logos, icons, images, audio clips, digital downloads, and software, is the property of Vortex AI or its content suppliers and is protected by copyright laws.
+                            </p>
+                            <p class="text-gray-700 leading-relaxed">
+                                Sellers retain ownership of their uploaded content but grant Vortex AI a license to display, distribute, and market their products on the Platform. Buyers receive a limited, non-exclusive, non-transferable license to use purchased digital products for personal use only.
+                            </p>
+                        </section>
+
+                        <!-- Prohibited Activities -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Prohibited Activities</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                You agree not to engage in any of the following prohibited activities:
+                            </p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                                <li>Violating any applicable laws or regulations</li>
+                                <li>Infringing on intellectual property rights of others</li>
+                                <li>Uploading malicious code, viruses, or harmful content</li>
+                                <li>Engaging in fraudulent activities or scams</li>
+                                <li>Harassing, threatening, or abusing other users</li>
+                                <li>Creating fake accounts or impersonating others</li>
+                                <li>Scraping, data mining, or automated data collection</li>
+                                <li>Circumventing security measures or access controls</li>
+                                <li>Selling prohibited or illegal content</li>
+                            </ul>
+                        </section>
+
+                        <!-- Termination -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Account Termination</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                We reserve the right to suspend or terminate your account and access to the Platform at our sole discretion, without notice or liability, for any reason, including but not limited to:
+                            </p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-4">
+                                <li>Violation of these Terms of Service</li>
+                                <li>Fraudulent or illegal activities</li>
+                                <li>Requests from law enforcement or government agencies</li>
+                                <li>Extended periods of inactivity</li>
+                                <li>Abuse of the Platform or other users</li>
+                            </ul>
+                            <p class="text-gray-700 leading-relaxed mt-4">
+                                You may delete your account at any time through your account settings. Upon termination, your right to use the Platform will immediately cease.
+                            </p>
+                        </section>
+
+                        <!-- Disclaimer of Warranties -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Disclaimer of Warranties</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">
+                                THE PLATFORM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS. WE MAKE NO WARRANTIES REGARDING THE QUALITY, ACCURACY, OR RELIABILITY OF ANY CONTENT AVAILABLE ON THE PLATFORM.
+                            </p>
+                        </section>
+
+                        <!-- Limitation of Liability -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-pink-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Limitation of Liability</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">
+                                TO THE FULLEST EXTENT PERMITTED BY LAW, VORTEX AI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES RESULTING FROM YOUR USE OF THE PLATFORM.
+                            </p>
+                        </section>
+
+                        <!-- Changes to Terms -->
+                        <section class="mb-8 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Changes to These Terms</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">
+                                We reserve the right to modify these Terms at any time. We will notify you of any material changes by posting the new Terms on this page and updating the "Last updated" date. Your continued use of the Platform after any changes constitutes acceptance of the new Terms.
+                            </p>
+                        </section>
+
+                        <!-- Contact Information -->
+                        <section class="mb-4 animate-on-scroll">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-teal-900 m-0">Contact Us</h2>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mb-4">
+                                If you have any questions, concerns, or disputes regarding these Terms, please contact us:
+                            </p>
+                            <div class="bg-gradient-to-r from-teal-50 to-blue-50 p-6 rounded-lg border border-teal-200 shadow-sm">
+                                <p class="text-gray-700 mb-2"><strong>Email:</strong> legal@vortexai.com</p>
+                                <p class="text-gray-700 mb-2"><strong>Contact Form:</strong> <a href="{% url 'contact_us' %}" class="text-teal-600 hover:text-teal-800 underline transition-colors">Visit our contact page</a></p>
+                                <p class="text-gray-700"><strong>Response Time:</strong> We aim to respond to all inquiries within 48 hours</p>
+                            </div>
+                        </section>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full px-4 sm:px-6 lg:px-8 py-6 bg-white border-t border-gray-200 mt-auto">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
+                    <!-- Copyright and links -->
+                    <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
+                        <div class="text-zinc-800 text-xs font-medium font-['Urbanist'] leading-none">
+                            Copyright 2026 Vortex AI
+                        </div>
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <a href="{% url 'terms_of_service' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
+                                Terms of Service
+                            </a>
+                            <a href="{% url 'privacy_policy' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
+                                Privacy Policy
+                            </a>
+                            <a href="{% url 'contact_us' %}" class="text-gray-600 text-xs font-normal font-['Urbanist'] leading-none hover:text-teal-900 transition-colors">
+                                Contact
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Social icons -->
+                    <div class="flex items-center gap-3">
+                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-125">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/FacebookLogo.svg' %}" alt="Facebook" class="w-5 h-5">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-125">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/TwitterLogo.svg' %}" alt="Twitter" class="w-5 h-5">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-125">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/InstagramLogo.svg' %}" alt="Instagram" class="w-5 h-5">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-125">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/YoutubeLogo.svg' %}" alt="YouTube" class="w-5 h-5">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-teal-900 transition-all duration-300 transform hover:scale-125">
+                            <img src="{% static 'assets/Buyer_Dashboard_images/LinkedinLogo.svg' %}" alt="LinkedIn" class="w-5 h-5">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scroll Animation Script -->
+    <script>
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all elements with animate-on-scroll class
+        document.querySelectorAll('.animate-on-scroll').forEach((el) => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

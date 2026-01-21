@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="/output.css" rel="stylesheet">
     <title>{{ product.title }} - Seller Product Details</title>
     <style>
@@ -103,7 +103,11 @@
     <div id="overlay" class="overlay"></div>
 
     <!-- Dynamic Sidebar -->
-    {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+    {% if user.user_type == 'seller' %}
+        {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=False switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+    {% else %}
+        {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=False switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='products' %}
+    {% endif %}
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden md:ml-54 lg:ml-64">
@@ -218,7 +222,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="opacity-50">Category:</span>
-                            <span>{{ product.category.name }}</span>
+                            <span>{{ product.category }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="opacity-50">Status:</span>
@@ -235,47 +239,47 @@
                     <!-- Seller Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-4 mb-6">
                         {% if product_type == 'book' %}
-                            <a href="{% url 'edit_book' product.id %}" class="flex-1 py-2.5 text-teal-900 border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-colors text-center">
+                            <a href="{% url 'edit_book' product.id %}" class="flex-1 py-2.5 text-teal-900 text-sm font-medium border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 text-center">
                                 Edit Book
                             </a>
                         {% elif product_type == 'course' %}
-                            <a href="{% url 'edit_course' product.id %}" class="flex-1 py-2.5 text-teal-900 border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-colors text-center">
+                            <a href="{% url 'edit_course' product.id %}" class="flex-1 py-2.5 text-teal-900 text-sm font-medium border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 text-center">
                                 Edit Course
                             </a>
                         {% elif product_type == 'webinar' %}
-                            <a href="{% url 'edit_webinar' product.id %}" class="flex-1 py-2.5 text-teal-900 border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-colors text-center">
+                            <a href="{% url 'edit_webinar' product.id %}" class="flex-1 py-2.5 text-teal-900 text-sm font-medium border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 text-center">
                                 Edit Webinar
                             </a>
                         {% elif product_type == 'service' %}
-                            <a href="{% url 'edit_service' product.id %}" class="flex-1 py-2.5 text-teal-900 border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-colors text-center">
+                            <a href="{% url 'edit_service' product.id %}" class="flex-1 py-2.5 text-teal-900 text-sm font-medium border border-teal-900 rounded-md hover:bg-teal-900 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 text-center">
                                 Edit Service
                             </a>
                         {% endif %}
                         {% if product_type == 'book' %}
                             <form method="post" action="{% url 'delete_book' product.id %}" class="flex-1" onsubmit="return confirmDelete(event, '{{ product.title }}')">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full py-2.5 text-red-600 border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-lg cursor-pointer">
+                                <button type="submit" class="w-full py-2.5 text-red-600 text-sm font-medium border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 cursor-pointer">
                                     Delete
                                 </button>
                             </form>
                         {% elif product_type == 'course' %}
                             <form method="post" action="{% url 'delete_course' product.id %}" class="flex-1" onsubmit="return confirmDelete(event, '{{ product.title }}')">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full py-2.5 text-red-600 border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-lg cursor-pointer">
+                                <button type="submit" class="w-full py-2.5 text-red-600 text-sm font-medium border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 cursor-pointer">
                                     Delete
                                 </button>
                             </form>
                         {% elif product_type == 'webinar' %}
                             <form method="post" action="{% url 'delete_webinar' product.id %}" class="flex-1" onsubmit="return confirmDelete(event, '{{ product.title }}')">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full py-2.5 text-red-600 border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-lg cursor-pointer">
+                                <button type="submit" class="w-full py-2.5 text-red-600 text-sm font-medium border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 cursor-pointer">
                                     Delete
                                 </button>
                             </form>
                         {% elif product_type == 'service' %}
                             <form method="post" action="{% url 'delete_service' product.id %}" class="flex-1" onsubmit="return confirmDelete(event, '{{ product.title }}')">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full py-2.5 text-red-600 border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-lg cursor-pointer">
+                                <button type="submit" class="w-full py-2.5 text-red-600 text-sm font-medium border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition-all duration-300 hover:shadow-md transform hover:scale-105 cursor-pointer">
                                     Delete
                                 </button>
                             </form>

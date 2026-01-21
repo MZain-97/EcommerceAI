@@ -15,7 +15,7 @@
     <!-- Highlight.js for code syntax highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
@@ -140,14 +140,35 @@
             font-style: italic;
         }
 
-        .ai-response a {
+        .ai-response a,
+        .ai-response .chatbot-product-link {
             color: #0d9488;
             text-decoration: underline;
-            transition: color 0.2s;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
         }
 
-        .ai-response a:hover {
+        .ai-response a:hover,
+        .ai-response .chatbot-product-link:hover {
             color: #0f766e;
+            text-decoration: underline;
+            font-weight: 600;
+            text-shadow: 0 0 1px rgba(13, 148, 136, 0.3);
+        }
+
+        /* Add external link icon for product links */
+        .ai-response .chatbot-product-link::after {
+            content: " ↗";
+            font-size: 0.75em;
+            opacity: 0.6;
+            margin-left: 2px;
+            transition: opacity 0.2s;
+        }
+
+        .ai-response .chatbot-product-link:hover::after {
+            opacity: 1;
         }
 
         .ai-response strong {
@@ -243,9 +264,9 @@
 
             <!-- Dynamic Sidebar -->
             {% if user.user_type == 'seller' %}
-                {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='chatbot' %}
+                {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=False switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='chatbot' %}
             {% else %}
-                {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='chatbot' %}
+                {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=False switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='chatbot' %}
             {% endif %}
 
             <!-- Mobile Header -->
@@ -537,38 +558,67 @@
                 return messageDiv;
             }
 
-            // Configure Marked.js for better rendering
+            // Configure Marked.js for better rendering with clickable links
             if (typeof marked !== 'undefined') {
-                marked.setOptions({
+                // Use marked.use() for modern marked.js API (v4+)
+                marked.use({
                     breaks: true,
                     gfm: true,
+                    renderer: {
+                        // Override link rendering to add target="_blank" and security attributes
+                        link(token) {
+                            const href = token.href;
+                            const text = token.text;
+                            const title = token.title;
+                            const titleAttr = title ? ` title="${title}"` : '';
+                            return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer" class="chatbot-product-link">${text}</a>`;
+                        }
+                    },
                     highlight: function(code, lang) {
-                        if (lang && hljs.getLanguage(lang)) {
+                        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
                             try {
                                 return hljs.highlight(code, { language: lang }).value;
-                            } catch (err) {}
+                            } catch (err) {
+                                console.error('Highlight error:', err);
+                            }
                         }
-                        return hljs.highlightAuto(code).value;
+                        return code;
                     }
                 });
+
+                console.log('[Chatbot] Marked.js configured with clickable links');
+            } else {
+                console.warn('[Chatbot] Marked.js not loaded - markdown rendering disabled');
             }
 
             // Function to process markdown and add code copy buttons
             function processMarkdown(text) {
                 if (typeof marked === 'undefined') {
+                    console.warn('[Chatbot] Marked.js not available, using plain text');
                     return text.replace(/\n/g, '<br>');
                 }
 
-                // Convert markdown to HTML
-                let html = marked.parse(text);
+                try {
+                    // Convert markdown to HTML
+                    let html = marked.parse(text);
 
-                // Add copy buttons to code blocks
-                html = html.replace(/<pre><code(.*?)>([\s\S]*?)<\/code><\/pre>/g, function(match, attributes, code) {
-                    const copyBtn = '<button class="copy-code-btn" onclick="copyCode(this)">Copy</button>';
-                    return '<div class="code-block-wrapper"><pre><code' + attributes + '>' + code + '</code></pre>' + copyBtn + '</div>';
-                });
+                    // Log for debugging
+                    if (text.includes('[') && text.includes('](')) {
+                        console.log('[Chatbot] Processing markdown with links:', text.substring(0, 100) + '...');
+                        console.log('[Chatbot] Rendered HTML:', html.substring(0, 200) + '...');
+                    }
 
-                return html;
+                    // Add copy buttons to code blocks
+                    html = html.replace(/<pre><code(.*?)>([\s\S]*?)<\/code><\/pre>/g, function(match, attributes, code) {
+                        const copyBtn = '<button class="copy-code-btn" onclick="copyCode(this)">Copy</button>';
+                        return '<div class="code-block-wrapper"><pre><code' + attributes + '>' + code + '</code></pre>' + copyBtn + '</div>';
+                    });
+
+                    return html;
+                } catch (error) {
+                    console.error('[Chatbot] Markdown processing error:', error);
+                    return text.replace(/\n/g, '<br>');
+                }
             }
 
             // Function to create AI message element with professional markdown rendering

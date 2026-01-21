@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="/output.css" rel="stylesheet">
     <title>{% if is_edit %}Edit Book{% else %}Add New Book{% endif %}</title>
     <style>
@@ -36,7 +36,7 @@
             </button>
 
             <!-- Dynamic Sidebar -->
-            {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=True switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+            {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=False switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
 
             <!-- Main Content -->
             <div class="content-area w-full md:ml-54 lg:ml-64">
@@ -82,7 +82,7 @@
                                             <div class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</div>
                                         {% endif %}
                                     </div>
-                                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-4 md:gap-6">
+                                    <div class="grid grid-cols-1 gap-4 md:gap-6">
                                         <div class="w-full">
                                             <label class="block text-teal-900 text-base font-medium mb-2">Price</label>
                                             {{ form.price }}
@@ -90,12 +90,25 @@
                                                 <div class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</div>
                                             {% endif %}
                                         </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                         <div class="w-full">
-                                            <label class="block text-teal-900 text-base font-medium mb-2">Category</label>
-                                            {{ form.category }}
-                                            {% if form.category.errors %}
-                                                <div class="text-red-500 text-sm mt-1">{{ form.category.errors.0 }}</div>
+                                            <label class="block text-teal-900 text-base font-medium mb-2">Main Category</label>
+                                            {{ form.main_category }}
+                                            {% if form.main_category.errors %}
+                                                <div class="text-red-500 text-sm mt-1">{{ form.main_category.errors.0 }}</div>
                                             {% endif %}
+                                            <p class="text-xs text-gray-500 mt-1">Select from admin-created categories</p>
+                                        </div>
+                                        <div class="w-full">
+                                            <label class="block text-teal-900 text-base font-medium mb-2">Sub-Category</label>
+                                            {{ form.subcategory }}
+                                            <datalist id="subcategory-datalist"></datalist>
+                                            {% if form.subcategory.errors %}
+                                                <div class="text-red-500 text-sm mt-1">{{ form.subcategory.errors.0 }}</div>
+                                            {% endif %}
+                                            <p class="text-xs text-gray-500 mt-1">Type to select or add new</p>
+                                            <p id="subcategory-status" class="text-xs mt-1 hidden"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -353,6 +366,103 @@
                     fileInput.dispatchEvent(event);
                 }
             });
+        }
+
+        // Category management functions
+        const mainCategorySelect = document.getElementById('main-category-select');
+        const subcategoryInput = document.getElementById('subcategory-input');
+        const subcategoryDatalist = document.getElementById('subcategory-datalist');
+        const subcategoryStatus = document.getElementById('subcategory-status');
+
+        // Load subcategories when main category changes
+        function loadSubcategories(mainCategoryId) {
+            if (!mainCategoryId) {
+                subcategoryDatalist.innerHTML = '';
+                subcategoryInput.disabled = true;
+                subcategoryInput.value = '';
+                return;
+            }
+
+            subcategoryInput.disabled = false;
+
+            // Fetch subcategories from server
+            fetch(`/api/subcategories/${mainCategoryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing options
+                        subcategoryDatalist.innerHTML = '';
+
+                        // Populate datalist with subcategories
+                        data.subcategories.forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.name;
+                            subcategoryDatalist.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading subcategories:', error);
+                });
+        }
+
+        // Validate subcategory as user types
+        let validateTimeout;
+        if (subcategoryInput) {
+            subcategoryInput.addEventListener('input', function() {
+                clearTimeout(validateTimeout);
+
+                const mainCategoryId = mainCategorySelect ? mainCategorySelect.value : null;
+                const subcategoryName = this.value.trim();
+
+                if (!subcategoryName || !mainCategoryId) {
+                    subcategoryStatus.classList.add('hidden');
+                    return;
+                }
+
+                // Debounce validation
+                validateTimeout = setTimeout(() => {
+                    fetch('/api/validate-subcategory/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            main_category_id: mainCategoryId,
+                            subcategory_name: subcategoryName
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            subcategoryStatus.classList.remove('hidden');
+                            if (data.exists) {
+                                subcategoryStatus.textContent = 'Existing sub-category';
+                                subcategoryStatus.className = 'text-xs mt-1 text-blue-600';
+                            } else {
+                                subcategoryStatus.textContent = 'New sub-category will be created';
+                                subcategoryStatus.className = 'text-xs mt-1 text-green-600';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error validating subcategory:', error);
+                    });
+                }, 500);
+            });
+        }
+
+        // Initialize on page load
+        if (mainCategorySelect) {
+            mainCategorySelect.addEventListener('change', function() {
+                loadSubcategories(this.value);
+            });
+
+            // Load subcategories if editing and main category is already selected
+            if (mainCategorySelect.value) {
+                loadSubcategories(mainCategorySelect.value);
+            }
         }
     </script>
 </body>

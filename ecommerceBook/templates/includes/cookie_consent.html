@@ -1,0 +1,294 @@
+<!-- Cookie Consent Banner with animations -->
+<div id="cookie-consent-banner" class="fixed bottom-0 left-0 right-0 z-50 transform translate-y-full transition-transform duration-700 ease-out">
+    <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 shadow-2xl border-t-4 border-teal-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Icon and Message -->
+                <div class="flex items-start gap-4 flex-1">
+                    <!-- Animated Cookie Icon -->
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center shadow-lg animate-bounce-slow">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9a1 1 0 100-2 1 1 0 000 2zm3-1a1 1 0 11-2 0 1 1 0 012 0zm1 5a1 1 0 100-2 1 1 0 000 2zm2-3a1 1 0 11-2 0 1 1 0 012 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Text Content -->
+                    <div class="flex-1">
+                        <h3 class="text-white font-bold text-base sm:text-lg mb-2 flex items-center gap-2">
+                            <span>We Value Your Privacy</span>
+                            <span class="inline-block animate-pulse">🍪</span>
+                        </h3>
+                        <p class="text-gray-300 text-sm leading-relaxed">
+                            We use cookies to enhance your experience, analyze site traffic, and provide personalized content.
+                            By clicking "Accept All," you consent to our use of cookies. Learn more in our
+                            <a href="{% url 'privacy_policy' %}" class="text-teal-400 hover:text-teal-300 underline font-medium transition-colors duration-200">Privacy Policy</a> and
+                            <a href="{% url 'terms_of_service' %}" class="text-teal-400 hover:text-teal-300 underline font-medium transition-colors duration-200">Terms of Service</a>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <!-- Customize Button -->
+                    <button
+                        id="cookie-customize-btn"
+                        class="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            Customize
+                        </span>
+                    </button>
+
+                    <!-- Reject Button -->
+                    <button
+                        id="cookie-reject-btn"
+                        class="px-6 py-2.5 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900">
+                        Reject
+                    </button>
+
+                    <!-- Accept Button with gradient and animation -->
+                    <button
+                        id="cookie-accept-btn"
+                        class="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900 relative overflow-hidden group">
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Accept All
+                        </span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Preferences Modal -->
+<div id="cookie-preferences-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop with blur -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300" id="cookie-modal-backdrop"></div>
+
+    <!-- Modal Content -->
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full transform transition-all duration-300 scale-95" id="cookie-modal-content">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM7 9a1 1 0 100-2 1 1 0 000 2zm3-1a1 1 0 11-2 0 1 1 0 012 0zm1 5a1 1 0 100-2 1 1 0 000 2zm2-3a1 1 0 11-2 0 1 1 0 012 0z"/>
+                        </svg>
+                        Cookie Preferences
+                    </h2>
+                    <button id="cookie-modal-close" class="text-white hover:text-gray-200 transition-colors duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 max-h-96 overflow-y-auto">
+                <p class="text-gray-600 mb-6">
+                    Customize your cookie preferences below. You can enable or disable different types of cookies based on your preferences.
+                </p>
+
+                <!-- Essential Cookies -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4 border-l-4 border-teal-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="flex items-center gap-3 flex-1 cursor-not-allowed">
+                            <input type="checkbox" checked disabled class="w-5 h-5 text-teal-600 rounded opacity-50">
+                            <span class="font-semibold text-gray-900">Essential Cookies</span>
+                        </label>
+                        <span class="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">Always Active</span>
+                    </div>
+                    <p class="text-sm text-gray-600 ml-8">
+                        These cookies are necessary for the website to function and cannot be disabled. They include authentication, security, and basic functionality.
+                    </p>
+                </div>
+
+                <!-- Analytics Cookies -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <label class="flex items-center justify-between mb-2 cursor-pointer group">
+                        <div class="flex items-center gap-3 flex-1">
+                            <input type="checkbox" id="cookie-analytics" checked class="w-5 h-5 text-teal-600 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                            <span class="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">Analytics Cookies</span>
+                        </div>
+                        <span class="text-xs text-teal-600 font-medium">Recommended</span>
+                    </label>
+                    <p class="text-sm text-gray-600 ml-8">
+                        Help us understand how visitors interact with our website by collecting and reporting information anonymously. This helps us improve your experience.
+                    </p>
+                </div>
+
+                <!-- Marketing Cookies -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <input type="checkbox" id="cookie-marketing" checked class="w-5 h-5 text-teal-600 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                        <span class="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">Marketing Cookies</span>
+                    </label>
+                    <p class="text-sm text-gray-600 ml-8 mt-2">
+                        Used to track visitors across websites to display relevant advertisements and marketing campaigns that are more engaging and valuable to you.
+                    </p>
+                </div>
+
+                <!-- Personalization Cookies -->
+                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <label class="flex items-center justify-between mb-2 cursor-pointer group">
+                        <div class="flex items-center gap-3 flex-1">
+                            <input type="checkbox" id="cookie-personalization" checked class="w-5 h-5 text-teal-600 rounded focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                            <span class="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">Personalization Cookies</span>
+                        </div>
+                        <span class="text-xs text-teal-600 font-medium">Recommended</span>
+                    </label>
+                    <p class="text-sm text-gray-600 ml-8">
+                        Enable personalized features such as AI-powered recommendations, saved preferences, and customized content based on your interests.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 rounded-b-2xl flex flex-col sm:flex-row gap-3 justify-end">
+                <button
+                    id="cookie-modal-reject-all"
+                    class="px-6 py-2.5 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    Reject All
+                </button>
+                <button
+                    id="cookie-modal-save"
+                    class="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Consent JavaScript -->
+<script>
+    // Cookie helper functions
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Check if user has already made a choice
+    const cookieConsent = getCookie('cookie_consent');
+    const banner = document.getElementById('cookie-consent-banner');
+    const modal = document.getElementById('cookie-preferences-modal');
+    const modalContent = document.getElementById('cookie-modal-content');
+    const modalBackdrop = document.getElementById('cookie-modal-backdrop');
+
+    // Show banner with animation if no consent cookie exists
+    if (!cookieConsent) {
+        setTimeout(() => {
+            banner.classList.remove('translate-y-full');
+        }, 1000);
+    }
+
+    // Accept all cookies
+    document.getElementById('cookie-accept-btn').addEventListener('click', () => {
+        setCookie('cookie_consent', 'all', 365);
+        setCookie('cookie_analytics', 'true', 365);
+        setCookie('cookie_marketing', 'true', 365);
+        setCookie('cookie_personalization', 'true', 365);
+        hideBanner();
+    });
+
+    // Reject all cookies
+    document.getElementById('cookie-reject-btn').addEventListener('click', () => {
+        setCookie('cookie_consent', 'essential', 365);
+        setCookie('cookie_analytics', 'false', 365);
+        setCookie('cookie_marketing', 'false', 365);
+        setCookie('cookie_personalization', 'false', 365);
+        hideBanner();
+    });
+
+    // Open preferences modal
+    document.getElementById('cookie-customize-btn').addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalBackdrop.classList.add('opacity-100');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }, 10);
+    });
+
+    // Close modal
+    function closeModal() {
+        modalBackdrop.classList.remove('opacity-100');
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    document.getElementById('cookie-modal-close').addEventListener('click', closeModal);
+    document.getElementById('cookie-modal-backdrop').addEventListener('click', closeModal);
+
+    // Save custom preferences
+    document.getElementById('cookie-modal-save').addEventListener('click', () => {
+        const analytics = document.getElementById('cookie-analytics').checked;
+        const marketing = document.getElementById('cookie-marketing').checked;
+        const personalization = document.getElementById('cookie-personalization').checked;
+
+        setCookie('cookie_consent', 'custom', 365);
+        setCookie('cookie_analytics', analytics.toString(), 365);
+        setCookie('cookie_marketing', marketing.toString(), 365);
+        setCookie('cookie_personalization', personalization.toString(), 365);
+
+        closeModal();
+        hideBanner();
+    });
+
+    // Reject all from modal
+    document.getElementById('cookie-modal-reject-all').addEventListener('click', () => {
+        setCookie('cookie_consent', 'essential', 365);
+        setCookie('cookie_analytics', 'false', 365);
+        setCookie('cookie_marketing', 'false', 365);
+        setCookie('cookie_personalization', 'false', 365);
+        closeModal();
+        hideBanner();
+    });
+
+    // Hide banner with animation
+    function hideBanner() {
+        banner.classList.add('translate-y-full');
+        setTimeout(() => {
+            banner.style.display = 'none';
+        }, 700);
+    }
+
+    // Add custom animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes bounce-slow {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+        }
+    `;
+    document.head.appendChild(style);
+</script>

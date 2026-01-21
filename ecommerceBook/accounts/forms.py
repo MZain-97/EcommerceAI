@@ -202,13 +202,32 @@ class BookForm(forms.ModelForm):
             'step': '0.01'
         })
     )
-    category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        empty_label="Select Category",
+
+    # Two-tier category selection
+    main_category = forms.ModelChoiceField(
+        queryset=Category.objects.filter(is_main_category=True, is_active=True),
+        empty_label="Select Main Category",
         widget=forms.Select(attrs={
-            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300'
-        })
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'main-category-select',
+            'onchange': 'loadSubcategories(this.value)'
+        }),
+        help_text="Select the main category for your book"
     )
+
+    subcategory = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'subcategory-input',
+            'list': 'subcategory-datalist',
+            'placeholder': 'Type or select a sub-category',
+            'autocomplete': 'off'
+        }),
+        help_text="Type a new sub-category or select from existing ones"
+    )
+
     book_image = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -227,7 +246,66 @@ class BookForm(forms.ModelForm):
 
     class Meta:
         model = Book
-        fields = ['title', 'description', 'price', 'category', 'book_image', 'book_file']
+        fields = ['title', 'description', 'price', 'book_image', 'book_file']
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        # If editing existing book, pre-populate category fields
+        if self.instance and self.instance.pk and self.instance.category:
+            if self.instance.category.parent:
+                # It's a sub-category
+                self.fields['main_category'].initial = self.instance.category.parent
+                self.fields['subcategory'].initial = self.instance.category.name
+            else:
+                # It's a main category (legacy data)
+                self.fields['main_category'].initial = self.instance.category
+                self.fields['subcategory'].initial = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+        main_category = cleaned_data.get('main_category')
+        subcategory_name = cleaned_data.get('subcategory', '').strip()
+
+        if not subcategory_name:
+            raise forms.ValidationError("Sub-category is required")
+
+        # Normalize subcategory name (capitalize first letter of each word)
+        subcategory_name = subcategory_name.title()
+
+        # Check if subcategory exists under this main category (case-insensitive)
+        subcategory = Category.objects.filter(
+            parent=main_category,
+            name__iexact=subcategory_name
+        ).first()
+
+        if subcategory:
+            # Use existing subcategory
+            cleaned_data['category'] = subcategory
+        else:
+            # Create new subcategory
+            subcategory = Category.objects.create(
+                name=subcategory_name,
+                parent=main_category,
+                created_by=self.user,
+                is_main_category=False,
+                is_active=True,
+                approval_status='approved',  # Auto-approve
+                is_approved=True
+            )
+            cleaned_data['category'] = subcategory
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.category = self.cleaned_data['category']
+
+        if commit:
+            instance.save()
+
+        return instance
 
     def clean_book_file(self):
         file = self.cleaned_data.get('book_file')
@@ -278,13 +356,32 @@ class CourseForm(forms.ModelForm):
             'step': '0.01'
         })
     )
-    category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        empty_label="Select Category",
+
+    # Two-tier category selection
+    main_category = forms.ModelChoiceField(
+        queryset=Category.objects.filter(is_main_category=True, is_active=True),
+        empty_label="Select Main Category",
         widget=forms.Select(attrs={
-            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300'
-        })
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'main-category-select',
+            'onchange': 'loadSubcategories(this.value)'
+        }),
+        help_text="Select the main category for your course"
     )
+
+    subcategory = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'subcategory-input',
+            'list': 'subcategory-datalist',
+            'placeholder': 'Type or select a sub-category',
+            'autocomplete': 'off'
+        }),
+        help_text="Type a new sub-category or select from existing ones"
+    )
+
     course_image = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -303,7 +400,59 @@ class CourseForm(forms.ModelForm):
 
     class Meta:
         model = Course
-        fields = ['title', 'description', 'price', 'category', 'course_image', 'course_file']
+        fields = ['title', 'description', 'price', 'course_image', 'course_file']
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk and self.instance.category:
+            if self.instance.category.parent:
+                self.fields['main_category'].initial = self.instance.category.parent
+                self.fields['subcategory'].initial = self.instance.category.name
+            else:
+                self.fields['main_category'].initial = self.instance.category
+                self.fields['subcategory'].initial = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+        main_category = cleaned_data.get('main_category')
+        subcategory_name = cleaned_data.get('subcategory', '').strip()
+
+        if not subcategory_name:
+            raise forms.ValidationError("Sub-category is required")
+
+        subcategory_name = subcategory_name.title()
+
+        subcategory = Category.objects.filter(
+            parent=main_category,
+            name__iexact=subcategory_name
+        ).first()
+
+        if subcategory:
+            cleaned_data['category'] = subcategory
+        else:
+            subcategory = Category.objects.create(
+                name=subcategory_name,
+                parent=main_category,
+                created_by=self.user,
+                is_main_category=False,
+                is_active=True,
+                approval_status='approved',
+                is_approved=True
+            )
+            cleaned_data['category'] = subcategory
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.category = self.cleaned_data['category']
+
+        if commit:
+            instance.save()
+
+        return instance
 
     def clean_course_file(self):
         file = self.cleaned_data.get('course_file')
@@ -354,13 +503,32 @@ class WebinarForm(forms.ModelForm):
             'step': '0.01'
         })
     )
-    category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        empty_label="Select Category",
+
+    # Two-tier category selection
+    main_category = forms.ModelChoiceField(
+        queryset=Category.objects.filter(is_main_category=True, is_active=True),
+        empty_label="Select Main Category",
         widget=forms.Select(attrs={
-            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300'
-        })
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'main-category-select',
+            'onchange': 'loadSubcategories(this.value)'
+        }),
+        help_text="Select the main category for your webinar"
     )
+
+    subcategory = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'subcategory-input',
+            'list': 'subcategory-datalist',
+            'placeholder': 'Type or select a sub-category',
+            'autocomplete': 'off'
+        }),
+        help_text="Type a new sub-category or select from existing ones"
+    )
+
     webinar_image = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -379,7 +547,59 @@ class WebinarForm(forms.ModelForm):
 
     class Meta:
         model = Webinar
-        fields = ['title', 'description', 'price', 'category', 'webinar_image', 'webinar_file']
+        fields = ['title', 'description', 'price', 'webinar_image', 'webinar_file']
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk and self.instance.category:
+            if self.instance.category.parent:
+                self.fields['main_category'].initial = self.instance.category.parent
+                self.fields['subcategory'].initial = self.instance.category.name
+            else:
+                self.fields['main_category'].initial = self.instance.category
+                self.fields['subcategory'].initial = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+        main_category = cleaned_data.get('main_category')
+        subcategory_name = cleaned_data.get('subcategory', '').strip()
+
+        if not subcategory_name:
+            raise forms.ValidationError("Sub-category is required")
+
+        subcategory_name = subcategory_name.title()
+
+        subcategory = Category.objects.filter(
+            parent=main_category,
+            name__iexact=subcategory_name
+        ).first()
+
+        if subcategory:
+            cleaned_data['category'] = subcategory
+        else:
+            subcategory = Category.objects.create(
+                name=subcategory_name,
+                parent=main_category,
+                created_by=self.user,
+                is_main_category=False,
+                is_active=True,
+                approval_status='approved',
+                is_approved=True
+            )
+            cleaned_data['category'] = subcategory
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.category = self.cleaned_data['category']
+
+        if commit:
+            instance.save()
+
+        return instance
 
     def clean_webinar_file(self):
         file = self.cleaned_data.get('webinar_file')
@@ -430,13 +650,32 @@ class ServiceForm(forms.ModelForm):
             'step': '0.01'
         })
     )
-    category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        empty_label="Select Category",
+
+    # Two-tier category selection
+    main_category = forms.ModelChoiceField(
+        queryset=Category.objects.filter(is_main_category=True, is_active=True),
+        empty_label="Select Main Category",
         widget=forms.Select(attrs={
-            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300'
-        })
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'main-category-select',
+            'onchange': 'loadSubcategories(this.value)'
+        }),
+        help_text="Select the main category for your service"
     )
+
+    subcategory = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full h-11 bg-zinc-50 rounded-md border border-gray-300 px-4 focus:outline-none focus:border-gray-300',
+            'id': 'subcategory-input',
+            'list': 'subcategory-datalist',
+            'placeholder': 'Type or select a sub-category',
+            'autocomplete': 'off'
+        }),
+        help_text="Type a new sub-category or select from existing ones"
+    )
+
     service_image = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -448,7 +687,59 @@ class ServiceForm(forms.ModelForm):
 
     class Meta:
         model = Service
-        fields = ['title', 'description', 'price', 'category', 'service_image']
+        fields = ['title', 'description', 'price', 'service_image']
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk and self.instance.category:
+            if self.instance.category.parent:
+                self.fields['main_category'].initial = self.instance.category.parent
+                self.fields['subcategory'].initial = self.instance.category.name
+            else:
+                self.fields['main_category'].initial = self.instance.category
+                self.fields['subcategory'].initial = ''
+
+    def clean(self):
+        cleaned_data = super().clean()
+        main_category = cleaned_data.get('main_category')
+        subcategory_name = cleaned_data.get('subcategory', '').strip()
+
+        if not subcategory_name:
+            raise forms.ValidationError("Sub-category is required")
+
+        subcategory_name = subcategory_name.title()
+
+        subcategory = Category.objects.filter(
+            parent=main_category,
+            name__iexact=subcategory_name
+        ).first()
+
+        if subcategory:
+            cleaned_data['category'] = subcategory
+        else:
+            subcategory = Category.objects.create(
+                name=subcategory_name,
+                parent=main_category,
+                created_by=self.user,
+                is_main_category=False,
+                is_active=True,
+                approval_status='approved',
+                is_approved=True
+            )
+            cleaned_data['category'] = subcategory
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.category = self.cleaned_data['category']
+
+        if commit:
+            instance.save()
+
+        return instance
 
     def clean_service_image(self):
         image = self.cleaned_data.get('service_image')

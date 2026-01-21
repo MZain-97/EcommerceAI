@@ -476,9 +476,30 @@
                     body: formData
                 });
 
-                const data = await response.json();
+                // Check if response status is OK (200-299)
+                if (!response.ok) {
+                    console.error('Server returned error status:', response.status);
 
-                if (data.success) {
+                    // Try to get error message from response
+                    try {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Server error (${response.status})`);
+                    } catch (jsonError) {
+                        throw new Error(`Server error (${response.status})`);
+                    }
+                }
+
+                // Parse JSON response
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse JSON response:', jsonError);
+                    throw new Error('Invalid response from server');
+                }
+
+                // Check success flag in response
+                if (data.success && data.message) {
                     const emptyState = document.getElementById('emptyState');
                     if (emptyState) emptyState.remove();
 
@@ -489,13 +510,23 @@
                     charCount.textContent = '0';
 
                     scrollToBottom();
-                    showToast('Message sent', 'success');
+                    showToast('Message sent successfully', 'success');
                 } else {
-                    showToast(data.error || 'Failed to send message', 'error');
+                    // Backend returned success:false
+                    console.error('Backend returned error:', data.error);
+                    throw new Error(data.error || 'Failed to send message');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Failed to send message', 'error');
+                console.error('Error sending message:', error);
+
+                // Show user-friendly error message
+                if (error.message) {
+                    showToast(error.message, 'error');
+                } else if (error.name === 'TypeError') {
+                    showToast('Network error. Please check your connection', 'error');
+                } else {
+                    showToast('Failed to send message. Please try again', 'error');
+                }
             } finally {
                 sendButton.disabled = false;
                 messageInput.disabled = false;
@@ -573,8 +604,23 @@
         setInterval(async function() {
             try {
                 const response = await fetch(`/api/get-messages/${chatId}/`);
-                const data = await response.json();
 
+                // Check response status
+                if (!response.ok) {
+                    console.error('Failed to fetch messages, status:', response.status);
+                    return;
+                }
+
+                // Parse JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse messages JSON:', jsonError);
+                    return;
+                }
+
+                // Check success and messages
                 if (data.success && data.messages) {
                     const currentMessages = messagesContainer.querySelectorAll('.message-item');
                     if (data.messages.length > currentMessages.length) {
@@ -597,6 +643,7 @@
                     }
                 }
             } catch (error) {
+                // Silent fail for auto-refresh - don't disturb user
                 console.error('Error fetching messages:', error);
             }
         }, 5000);

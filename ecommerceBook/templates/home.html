@@ -7,8 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="/output.css" rel="stylesheet">
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <title>Landing Page</title>
 </head>
 <style>
@@ -20,6 +22,38 @@
 /* Prevent body scroll when menu is open */
 body.menu-open {
     overflow: hidden;
+}
+
+/* Chatbot clickable links styling */
+.ai-response a,
+.ai-response .chatbot-product-link {
+    color: #0d9488;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.ai-response a:hover,
+.ai-response .chatbot-product-link:hover {
+    color: #0f766e;
+    text-decoration: underline;
+    font-weight: 600;
+    text-shadow: 0 0 1px rgba(13, 148, 136, 0.3);
+}
+
+/* Add external link icon for product links */
+.ai-response .chatbot-product-link::after {
+    content: " ↗";
+    font-size: 0.75em;
+    opacity: 0.6;
+    margin-left: 2px;
+    transition: opacity 0.2s;
+}
+
+.ai-response .chatbot-product-link:hover::after {
+    opacity: 1;
 }
     </style>
 <body class="font-urbanist bg-zinc-50">
@@ -646,21 +680,10 @@ body.menu-open {
                 const data = await response.json();
 
                 if (data.success && data.response) {
-                    // Simulate typing effect
-                    aiTextElement.textContent = '';
-                    let index = 0;
-                    const text = data.response;
-                    const typeSpeed = 20; // milliseconds per character
-
-                    function typeChar() {
-                        if (index < text.length) {
-                            aiTextElement.textContent += text.charAt(index);
-                            index++;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                            setTimeout(typeChar, typeSpeed);
-                        }
-                    }
-                    typeChar();
+                    // Process markdown and render with clickable links
+                    const htmlContent = processMarkdown(data.response);
+                    aiTextElement.innerHTML = htmlContent;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                 } else {
                     const errorMsg = data.message || data.error || 'An error occurred';
                     console.error('Backend error:', errorMsg);
@@ -709,7 +732,7 @@ body.menu-open {
                     <i class="fa-solid fa-robot text-white text-sm"></i>
                 </div>
                 <div class="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
-                    <p class="text-sm text-gray-800 ai-text"></p>
+                    <div class="text-sm text-gray-800 ai-text ai-response"></div>
                 </div>
             `;
             chatMessages.appendChild(messageDiv);
@@ -721,6 +744,37 @@ body.menu-open {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Configure marked.js for clickable links
+        if (typeof marked !== 'undefined') {
+            marked.use({
+                breaks: true,
+                gfm: true,
+                renderer: {
+                    link(token) {
+                        const href = token.href;
+                        const text = token.text;
+                        const title = token.title;
+                        const titleAttr = title ? ` title="${title}"` : '';
+                        return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer" class="chatbot-product-link">${text}</a>`;
+                    }
+                }
+            });
+            console.log('[Chatbot Widget] Marked.js configured with clickable links');
+        }
+
+        // Function to process markdown
+        function processMarkdown(text) {
+            if (typeof marked === 'undefined') {
+                return text.replace(/\n/g, '<br>');
+            }
+            try {
+                return marked.parse(text);
+            } catch (error) {
+                console.error('[Chatbot Widget] Markdown processing error:', error);
+                return text.replace(/\n/g, '<br>');
+            }
         }
     </script>
 

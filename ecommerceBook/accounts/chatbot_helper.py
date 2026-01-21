@@ -6,23 +6,47 @@ import logging
 from typing import List, Dict, Optional
 from django.conf import settings
 from django.core.cache import cache
-from pinecone import Pinecone, ServerlessSpec
-from openai import OpenAI, OpenAIError
 from .models import Book, Course, Webinar
 
 logger = logging.getLogger(__name__)
 
-# Initialize clients with error handling
+# Optional imports - handle gracefully if not installed
 try:
-    openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
-    pc = Pinecone(api_key=settings.PINECONE_API_KEY)
-    INDEX_NAME = settings.PINECONE_INDEX_NAME
-    logger.info("AI clients initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize AI clients: {e}")
-    openai_client = None
-    pc = None
-    INDEX_NAME = None
+    from pinecone import Pinecone, ServerlessSpec
+    PINECONE_AVAILABLE = True
+except ImportError:
+    logger.warning("Pinecone package not installed - vector search features will be disabled")
+    Pinecone = None
+    ServerlessSpec = None
+    PINECONE_AVAILABLE = False
+
+try:
+    from openai import OpenAI, OpenAIError
+    OPENAI_AVAILABLE = True
+except ImportError:
+    logger.warning("OpenAI package not installed - AI chat features will be disabled")
+    OpenAI = None
+    OpenAIError = Exception
+    OPENAI_AVAILABLE = False
+
+# Initialize clients with error handling
+openai_client = None
+pc = None
+INDEX_NAME = None
+
+if OPENAI_AVAILABLE and PINECONE_AVAILABLE:
+    try:
+        openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+        INDEX_NAME = settings.PINECONE_INDEX_NAME
+        logger.info("AI clients initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize AI clients: {e}")
+        openai_client = None
+        pc = None
+        INDEX_NAME = None
+else:
+    logger.warning("AI services unavailable - missing required packages (pinecone or openai)")
 
 
 def is_ai_available() -> bool:
@@ -357,13 +381,15 @@ def search_products(query: str, n_results: int = 5) -> List[Dict]:
         return []
 
 
-def generate_chat_response(query: str, context_products: List[Dict]):
+def generate_chat_response(query: str, context_products: List[Dict], conversation_history: Optional[List[Dict]] = None):
     """
-    Generate AI response using OpenAI Chat API with streaming.
+    Generate AI response using OpenAI Chat API with streaming and conversation memory.
 
     Args:
-        query: User's question
+        query: User's current question
         context_products: List of relevant product metadata
+        conversation_history: Optional list of previous messages in format:
+                            [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
 
     Returns:
         Stream object for response or None if failed
@@ -383,22 +409,26 @@ def generate_chat_response(query: str, context_products: List[Dict]):
                     product_id = int(product.get('id', 0))
                     product_type = product.get('type', 'book')
                     product_url = f"http://127.0.0.1:8000{reverse('product_detail', args=[product_type, product_id])}"
+                    product_title = product.get('title', 'Unknown')
 
-                    context += f"{i}. {product.get('type', '').title()}: {product.get('title', 'Unknown')}\n"
+                    context += f"{i}. {product.get('type', '').title()}: {product_title}\n"
                     context += f"   Price: ${product.get('price', '0')}\n"
                     context += f"   Category: {product.get('category', 'Uncategorized')}\n"
                     context += f"   Seller: {product.get('seller', 'Unknown')}\n"
-                    context += f"   Link: {product_url}\n"
+                    context += f"   Product Link: [{product_title}]({product_url})\n"
                     context += f"   Description: {product.get('description', '')[:200]}...\n\n"
                 except Exception as e:
                     logger.error(f"Error processing product {i}: {e}")
         else:
             context = "No products found matching your query."
 
-        # Create system prompt
+        # Create system prompt with conversation memory instructions
         system_prompt = """You are a helpful e-commerce shopping assistant for an online marketplace that sells books, courses, and webinars.
 
 Guidelines:
+- You have access to the conversation history - use it to maintain context
+- Remember what the user asked previously and reference it naturally
+- When user says "the first one" or "that book", refer to items mentioned earlier in the conversation
 - Adapt response length based on the question complexity
 - For simple questions (price, availability, single product): 1-2 sentences
 - For comparison or multiple products: 3-4 sentences
@@ -408,9 +438,10 @@ Guidelines:
 - Be natural, friendly, and match the tone of the question
 - If user asks for brief info, keep it short
 - If user asks for details or comparisons, provide comprehensive answer
-- If no products found, suggest browsing categories"""
+- If no products found, suggest browsing categories
+- Maintain conversation continuity - if user asks follow-up questions, understand the context"""
 
-        # Create user prompt
+        # Create user prompt with current query and context
         user_prompt = f"""Context (Available Products):
 {context}
 
@@ -418,13 +449,24 @@ User Question: {query}
 
 Provide a helpful response that matches the question's needs - short for simple queries, detailed for complex ones."""
 
+        # Build messages array with conversation history
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Add conversation history if available (limited to prevent token overflow)
+        if conversation_history:
+            # Take only the last 10 message pairs (20 messages) to stay within token limits
+            history_limit = 20
+            recent_history = conversation_history[-history_limit:] if len(conversation_history) > history_limit else conversation_history
+            messages.extend(recent_history)
+            logger.info(f"Added {len(recent_history)} messages from conversation history")
+
+        # Add current query with context
+        messages.append({"role": "user", "content": user_prompt})
+
         # Call OpenAI Chat API with streaming
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+            messages=messages,
             temperature=0.7,
             max_tokens=300,
             stream=True

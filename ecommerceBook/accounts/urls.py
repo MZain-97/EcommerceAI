@@ -63,7 +63,12 @@ urlpatterns = [
     path('stripe-connect/return/', views.stripe_connect_return, name='stripe_connect_return'),
     path('stripe-connect/refresh/', views.refresh_stripe_connect_link, name='refresh_stripe_connect_link'),
 
+    # Category AJAX endpoints
+    path('api/subcategories/<int:main_category_id>/', views.get_subcategories, name='get_subcategories'),
+    path('api/validate-subcategory/', views.validate_subcategory, name='validate_subcategory'),
+
     # Static Pages
     path('contact-us/', views.contact_us, name='contact_us'),
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('terms-of-service/', views.terms_of_service, name='terms_of_service'),
 ]

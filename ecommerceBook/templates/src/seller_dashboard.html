@@ -23,6 +23,23 @@
     <link href="{% static 'style/output.css' %}" rel="stylesheet">
     <link href="{% static 'style/custom.css' %}" rel="stylesheet">
     <title>Seller Dashboard</title>
+    <style>
+        /* Dropdown animation */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #dropdownMenu:not(.hidden) {
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+    </style>
 </head>
 
 <body class="font-urbanist bg-zinc-50">
@@ -163,14 +180,15 @@
 
                     <!-- Dropdown menu -->
                     <div id="dropdownMenu"
-                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 "
+                        class="hidden origin-top-right absolute left-0 mt-2 w-56 rounded-lg shadow-2xl bg-white border-2 border-gray-200 z-50"
                         role="menu" aria-orientation="vertical" aria-labelledby="categoryDropdown">
-                        <div class="py-1" role="none">
-                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+                        <div class="py-2" role="none">
+                            <a href="#" class="text-gray-800 font-semibold block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200 rounded-md mx-2"
                                 role="menuitem">All Categories</a>
+                            <div class="border-t border-gray-200 my-2"></div>
                             {% for category in categories %}
-                            <a href="#" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
-                                role="menuitem">{{ category.name }}</a>
+                            <a href="#" class="text-gray-700 block px-4 py-2.5 text-sm hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200 rounded-md mx-2"
+                                role="menuitem">{{ category }}</a>
                             {% empty %}
                             <span class="text-gray-500 block px-4 py-2 text-sm italic">No categories available</span>
                             {% endfor %}
@@ -190,7 +208,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                     {% for service in services %}
                         <!-- Service Card -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-category="{{ service.category }}" data-type="service">
                             <a href="{% url 'seller_product_detail' 'service' service.id %}" class="block w-full h-48 overflow-hidden">
                                 {% if service.service_image %}
                                     <img src="{{ service.service_image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover">
@@ -208,7 +226,7 @@
                                 <div class="flex justify-between items-center mb-3">
                                     <div class="flex items-center text-sm">
                                         <span class="text-gray-500 mr-1">Category:</span>
-                                        <span class="font-medium">{{ service.category.name }}</span>
+                                        <span class="font-medium">{{ service.category }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <span class="text-sm text-gray-500 mr-1">Price:</span>
@@ -222,7 +240,7 @@
                                 </div>
 
                                 <div class="flex space-x-2">
-                                    <a href="{% url 'seller_product_detail' 'service' service.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    <a href="{% url 'seller_product_detail' 'service' service.id %}" class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                         View Detail
                                     </a>
                                 </div>
@@ -235,7 +253,7 @@
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No services yet</h3>
                             <p class="text-gray-500 mb-4">Start by adding your first service to the marketplace.</p>
-                            <a href="{% url 'add_new_service' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                            <a href="{% url 'add_new_service' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                 Add Your First Service
                             </a>
                         </div>
@@ -254,7 +272,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ">
                     {% for book in books %}
                         <!-- Book Card -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-category="{{ book.category }}" data-type="book">
                             <a href="{% url 'seller_product_detail' 'book' book.id %}" class="block w-full h-48 overflow-hidden">
                                 {% if book.book_image %}
                                     <img src="{{ book.book_image.url }}" alt="{{ book.title }}" class="w-full h-full object-cover">
@@ -272,7 +290,7 @@
                                 <div class="flex justify-between items-center mb-3">
                                     <div class="flex items-center text-sm">
                                         <span class="text-gray-500 mr-1">Category:</span>
-                                        <span class="font-medium">{{ book.category.name }}</span>
+                                        <span class="font-medium">{{ book.category }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <span class="text-sm text-gray-500 mr-1">Price:</span>
@@ -285,7 +303,7 @@
                                     <span class="text-sm text-gray-700 font-bold">{{ book.created_at|date:"M d, Y" }}</span>
                                 </div>
                                 <div class="flex space-x-2">
-                                    <a href="{% url 'seller_product_detail' 'book' book.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    <a href="{% url 'seller_product_detail' 'book' book.id %}" class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                         View Detail
                                     </a>
                                 </div>
@@ -298,7 +316,7 @@
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No books yet</h3>
                             <p class="text-gray-500 mb-4">Start by adding your first book to the marketplace.</p>
-                            <a href="{% url 'add_new_book' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                            <a href="{% url 'add_new_book' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                 Add Your First Book
                             </a>
                         </div>
@@ -317,7 +335,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for course in courses %}
                         <!-- Course Card -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-category="{{ course.category }}" data-type="course">
                             <a href="{% url 'seller_product_detail' 'course' course.id %}" class="block w-full h-48 overflow-hidden">
                                 {% if course.course_image %}
                                     <img src="{{ course.course_image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
@@ -335,7 +353,7 @@
                                 <div class="flex justify-between items-center mb-3">
                                     <div class="flex items-center text-sm">
                                         <span class="text-gray-500 mr-1">Category:</span>
-                                        <span class="font-medium">{{ course.category.name }}</span>
+                                        <span class="font-medium">{{ course.category }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <span class="text-sm text-gray-500 mr-1">Price:</span>
@@ -346,7 +364,7 @@
                                     Created: {{ course.created_at|date:"M d, Y" }}
                                 </div>
                                 <div class="flex space-x-2">
-                                    <a href="{% url 'seller_product_detail' 'course' course.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    <a href="{% url 'seller_product_detail' 'course' course.id %}" class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                         View Detail
                                     </a>
                                 </div>
@@ -359,7 +377,7 @@
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No courses yet</h3>
                             <p class="text-gray-500 mb-4">Start by adding your first course to the marketplace.</p>
-                            <a href="{% url 'add_new_course' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                            <a href="{% url 'add_new_course' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                 Add Your First Course
                             </a>
                         </div>
@@ -378,7 +396,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for webinar in webinars %}
                         <!-- Webinar Card -->
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow" data-category="{{ webinar.category }}" data-type="webinar">
                             <a href="{% url 'seller_product_detail' 'webinar' webinar.id %}" class="block w-full h-48 overflow-hidden">
                                 {% if webinar.webinar_image %}
                                     <img src="{{ webinar.webinar_image.url }}" alt="{{ webinar.title }}" class="w-full h-full object-cover">
@@ -396,7 +414,7 @@
                                 <div class="flex justify-between items-center mb-3">
                                     <div class="flex items-center text-sm">
                                         <span class="text-gray-500 mr-1">Category:</span>
-                                        <span class="font-medium">{{ webinar.category.name }}</span>
+                                        <span class="font-medium">{{ webinar.category }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <span class="text-sm text-gray-500 mr-1">Price:</span>
@@ -408,7 +426,7 @@
                                     <span class="text-sm text-gray-700 font-bold">{{ webinar.created_at|date:"M d, Y" }}</span>
                                 </div>
                                 <div class="flex space-x-2">
-                                    <a href="{% url 'seller_product_detail' 'webinar' webinar.id %}" class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors text-center">
+                                    <a href="{% url 'seller_product_detail' 'webinar' webinar.id %}" class="flex-1 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all duration-300 text-center">
                                         View Detail
                                     </a>
                                 </div>
@@ -421,7 +439,7 @@
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">No webinars yet</h3>
                             <p class="text-gray-500 mb-4">Start by adding your first webinar to the marketplace.</p>
-                            <a href="{% url 'add_new_webinar' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+                            <a href="{% url 'add_new_webinar' %}" class="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                 Add Your First Webinar
                             </a>
                         </div>
@@ -483,20 +501,41 @@
             }
         });
 
-        // Close dropdown when clicking on a menu item
+        // Close dropdown when clicking on a menu item and filter products
         const menuItems = dropdownMenu.querySelectorAll('a');
         menuItems.forEach(item => {
-            item.addEventListener('click', function () {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
                 dropdownButton.setAttribute('aria-expanded', 'false');
                 dropdownMenu.classList.add('hidden');
-                // Update button text to show selected category
-                const buttonText = this.textContent;
+
+                // Get selected category
+                const selectedCategory = this.textContent.trim();
                 const buttonSpan = dropdownButton.querySelector('span');
-                if (buttonText !== 'All Categories') {
-                    buttonSpan.textContent = buttonText;
+
+                // Update button text
+                if (selectedCategory !== 'All Categories') {
+                    buttonSpan.textContent = selectedCategory;
                 } else {
                     buttonSpan.textContent = 'Category';
                 }
+
+                // Filter products by category
+                const allProducts = document.querySelectorAll('.product-card');
+                allProducts.forEach(product => {
+                    const productCategory = product.getAttribute('data-category');
+
+                    if (selectedCategory === 'All Categories') {
+                        // Show all products
+                        product.style.display = '';
+                    } else if (productCategory === selectedCategory) {
+                        // Show matching products
+                        product.style.display = '';
+                    } else {
+                        // Hide non-matching products
+                        product.style.display = 'none';
+                    }
+                });
             });
         });
     </script>

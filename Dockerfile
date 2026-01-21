@@ -52,7 +52,6 @@ RUN pip install --no-cache /wheels/*
 
 # Copy project files
 COPY ./ecommerceBook $APP_HOME/
-COPY ./.env $APP_HOME/
 COPY ./entrypoint.sh $APP_HOME/
 
 # Change ownership to app user

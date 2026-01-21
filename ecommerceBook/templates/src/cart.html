@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>Cart</title>
     <style>
         /* Toast notification animations */
@@ -72,9 +72,13 @@
 </head>
 <body class="font-urbanist bg-zinc-50 min-h-screen overflow-x-hidden">
     <div class="flex flex-col md:flex-row min-h-screen w-full max-w-full">
-        
+
         <!-- Dynamic Sidebar -->
-        {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=True switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='products' %}
+        {% if user.user_type == 'seller' %}
+            {% include 'includes/sidebar.html' with dashboard_url='seller_dashboard' orders_label='My Sales' show_bottom_actions=False switch_gradient='from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600' switch_icon='🛒' switch_text='Switch to Buyer' active_page='products' %}
+        {% else %}
+            {% include 'includes/sidebar.html' with dashboard_url='buyer_dashboard' orders_label='My Orders' show_bottom_actions=False switch_gradient='from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' switch_icon='🏪' switch_text='Switch to Seller' active_page='products' %}
+        {% endif %}
 
         <!-- Main Content Wrapper -->
         <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
@@ -238,7 +242,7 @@
                                 </svg>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                                 <p class="text-gray-500 mb-4">Add some items to your cart to get started.</p>
-                                <a href="{% url 'buyer_dashboard' %}" class="inline-flex items-center px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm rounded-md transition-colors">
+                                <a href="{% url 'buyer_dashboard' %}" class="inline-flex items-center px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                     Continue Shopping
                                 </a>
                             </div>
@@ -247,10 +251,10 @@
 
                         {% if cart_items %}
                         <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 sticky bottom-0 bg-zinc-50">
-                            <a href="{% url 'buyer_dashboard' %}" class="flex-1 px-3 sm:px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm rounded-md transition-colors text-center">
+                            <a href="{% url 'buyer_dashboard' %}" class="flex-1 px-3 sm:px-4 py-2 bg-teal-900 hover:bg-teal-800 text-white text-sm font-medium rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-md text-center">
                                 Continue Shopping
                             </a>
-                            <button onclick="clearCart()" class="flex-1 px-3 sm:px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm rounded-md transition-colors">
+                            <button onclick="clearCart()" class="flex-1 px-3 sm:px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm font-medium rounded-md transition-all duration-300">
                                 Clear Cart
                             </button>
                         </div>
@@ -280,7 +284,7 @@
                                         <span class="font-medium">Total</span>
                                         <span class="text-lg font-bold text-teal-900">${{ total_price }}</span>
                                     </div>
-                                    <button onclick="purchaseCart()" class="w-full py-2.5 bg-teal-900 hover:bg-teal-800 text-white font-medium text-sm sm:text-base rounded-md transition-colors">
+                                    <button onclick="purchaseCart()" class="w-full py-2.5 bg-teal-900 hover:bg-teal-800 text-white font-medium text-sm sm:text-base rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-md">
                                         Purchase All Items
                                     </button>
                                     <div class="mt-4 text-center">
